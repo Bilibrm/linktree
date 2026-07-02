@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import type { ThemeConfig, ThemePreset } from "@/types"
+import { PublicPreview } from "@/components/blocks/public-preview"
+import type { IBlock, ThemeConfig, ThemePreset } from "@/types"
 
 const presets: { name: ThemePreset; label: string; colors: { bg: string; accent: string; btn: string; text: string } }[] = [
   { name: "minimal", label: "Minimal", colors: { bg: "#ffffff", accent: "#000000", btn: "#000000", text: "#ffffff" } },
@@ -112,10 +113,20 @@ export function AppearanceClient({
   pageId,
   initialTheme,
   username,
+  blocks = [],
+  displayName,
+  avatarUrl,
+  bio,
+  title,
 }: {
   pageId: string
   initialTheme: ThemeConfig
   username: string
+  blocks?: IBlock[]
+  displayName?: string
+  avatarUrl?: string
+  bio?: string
+  title?: string
 }) {
   const [theme, setTheme] = useState<ThemeConfig>(initialTheme)
   const [saving, setSaving] = useState(false)
@@ -145,12 +156,14 @@ export function AppearanceClient({
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="font-display text-display font-bold">Appearance</h1>
         <p className="text-caption text-muted-foreground mt-0.5">Customize the look and feel of your public page.</p>
       </div>
 
+      <div className="flex flex-col xl:flex-row gap-8 items-start">
+      <div className="flex-1 min-w-0 w-full">
       <Tabs defaultValue="preset" className="space-y-6">
         <TabsList className="bg-surface border border-white/5">
           <TabsTrigger value="preset">Themes</TabsTrigger>
@@ -481,6 +494,25 @@ export function AppearanceClient({
         <Button onClick={save} disabled={saving} className="bg-gold text-ink hover:bg-gold/90">
           {saving ? "Saving..." : "Save changes"}
         </Button>
+      </div>
+      </div>
+
+      <aside className="w-full xl:w-[340px] xl:sticky xl:top-6 flex-shrink-0">
+        <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-3">Live Preview</h3>
+        <PublicPreview
+          blocks={blocks}
+          username={username}
+          theme={theme}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          bio={bio}
+          title={title}
+          editable
+        />
+        <p className="text-small text-muted-foreground mt-3 leading-relaxed">
+          Updates as you change settings below. Click &ldquo;Save changes&rdquo; to publish it to your live page.
+        </p>
+      </aside>
       </div>
     </div>
   )

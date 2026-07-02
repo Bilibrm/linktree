@@ -2,15 +2,24 @@
 
 import { useState } from "react"
 import { submitForm } from "@/lib/actions/form"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import type { BlockComponentProps } from "./block-renderer"
+import { getCardRadius, getButtonRadius, getShadowClass, getButtonColors, getAccentColor, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
 
-export function FormBlock({ data, blockId, pageId }: { data: any; blockId?: string; pageId?: string }) {
+export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const cardRadius = getCardRadius(theme)
+  const btnRadius = getButtonRadius(theme)
+  const shadow = getShadowClass(theme)
+  const accent = getAccentColor(theme)
+  const colors = getButtonColors(theme)
+  const anim = getEntranceAnimClass(theme)
+  const delayStyle = getEntranceDelayStyle(index)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -40,9 +49,9 @@ export function FormBlock({ data, blockId, pageId }: { data: any; blockId?: stri
 
   if (submitted) {
     return (
-      <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-sm font-medium">Thank you!</p>
-        <p className="text-xs text-muted-foreground mt-1">Your submission has been received.</p>
+      <div className={`${cardRadius} ${shadow} border p-6 text-center`} style={{ borderColor: accent, opacity: 0.9 }}>
+        <p className="text-sm font-semibold" style={{ color: accent }}>Thank you!</p>
+        <p className="text-xs mt-1" style={{ color: accent, opacity: 0.6 }}>Your submission has been received.</p>
       </div>
     )
   }
@@ -50,14 +59,14 @@ export function FormBlock({ data, blockId, pageId }: { data: any; blockId?: stri
   const fields = data.fields || []
 
   return (
-    <div className="rounded-xl border bg-card p-4">
-      {data.title && <h3 className="text-sm font-medium mb-3 text-center">{data.title}</h3>}
+    <div className={`${cardRadius} ${shadow} border p-4 ${anim}`} style={{ borderColor: accent, borderOpacity: 0.15, ...delayStyle } as React.CSSProperties}>
+      {data.title && <h3 className="text-sm font-semibold mb-3 text-center" style={{ color: accent }}>{data.title}</h3>}
       <form onSubmit={handleSubmit} className="space-y-3">
         {fields.map((field: any, i: number) => (
           <div key={i} className="space-y-1">
-            <Label className="text-xs">
+            <Label className="text-xs" style={{ color: accent, opacity: 0.7 }}>
               {field.label}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
+              {field.required && <span className="text-coral ml-0.5">*</span>}
             </Label>
             {field.type === "textarea" ? (
               <Textarea name={field.label} required={field.required} rows={3} />
@@ -66,9 +75,14 @@ export function FormBlock({ data, blockId, pageId }: { data: any; blockId?: stri
             )}
           </div>
         ))}
-        <Button type="submit" className="w-full rounded-full text-sm" size="sm" disabled={loading}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ backgroundColor: colors.backgroundColor, color: colors.color }}
+          className={`w-full ${btnRadius} py-2.5 text-sm font-semibold disabled:opacity-50 ${getHoverClass(theme)}`}
+        >
           {loading ? "Sending..." : data.buttonText || "Submit"}
-        </Button>
+        </button>
       </form>
     </div>
   )

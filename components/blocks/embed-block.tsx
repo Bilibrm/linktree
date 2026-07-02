@@ -1,4 +1,7 @@
-export function EmbedBlock({ data }: { data: any }) {
+import type { BlockComponentProps } from "./block-renderer"
+import { getCardRadius, getShadowClass, getButtonColors, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+
+export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const url = data.url || ""
 
   if (!url) return null
@@ -16,10 +19,14 @@ export function EmbedBlock({ data }: { data: any }) {
   }
 
   const embed = getEmbedUrl(url)
+  const radius = getCardRadius(theme)
+  const shadow = getShadowClass(theme)
+  const anim = getEntranceAnimClass(theme)
+  const delayStyle = getEntranceDelayStyle(index)
 
   if (embed) {
     return (
-      <div className="aspect-video rounded-xl overflow-hidden">
+      <div className={`aspect-video overflow-hidden ${radius} ${shadow} ${anim}`} style={delayStyle}>
         <iframe
           src={embed.src}
           title={embed.title}
@@ -31,15 +38,17 @@ export function EmbedBlock({ data }: { data: any }) {
     )
   }
 
+  const colors = getButtonColors(theme)
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-between w-full rounded-xl border bg-card px-4 py-3 text-sm hover:bg-muted/50 transition-all"
+      style={{ backgroundColor: colors.backgroundColor, color: colors.color, ...delayStyle }}
+      className={`flex items-center justify-between w-full ${radius} px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
     >
       <span>Open embedded content</span>
-      <span className="text-muted-foreground">↗</span>
+      <span className="opacity-60">↗</span>
     </a>
   )
 }

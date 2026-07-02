@@ -1,13 +1,24 @@
-import type { IBlock } from "@/types"
+import type { IBlock, ThemeConfig } from "@/types"
 import { BlockRenderer } from "./block-renderer"
+import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getAccentColor } from "@/lib/theme-utils"
 
 export function PublicPreview({
   blocks,
   username,
+  displayName,
+  avatarUrl,
+  bio,
+  title,
+  theme,
   editable,
 }: {
   blocks: IBlock[]
   username: string
+  displayName?: string
+  avatarUrl?: string
+  bio?: string
+  title?: string
+  theme?: ThemeConfig
   editable?: boolean
 }) {
   const visibleBlocks = blocks.filter((b) => {
@@ -18,27 +29,55 @@ export function PublicPreview({
     return true
   })
 
+  const t: ThemeConfig = theme || { preset: "minimal" }
+  const name = displayName || username
+  const accent = getAccentColor(t)
+  const avatarRadius = getAvatarRadius(t)
+  const maxWidth = getLayoutMaxWidth(t)
+  const gap = getSpacingGap(t)
+
+  const bg: React.CSSProperties = {}
+  if (t.backgroundType === "gradient" && t.backgroundValue) bg.background = t.backgroundValue
+  else if (t.backgroundType === "image" && t.backgroundValue) {
+    bg.backgroundImage = `url(${t.backgroundValue})`
+    bg.backgroundSize = "cover"
+    bg.backgroundPosition = "center"
+  } else bg.backgroundColor = t.backgroundColor || "#ffffff"
+
   return (
-    <div className="mx-auto max-w-sm w-full">
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold mb-3">
-          {username.charAt(0).toUpperCase()}
-        </div>
-        <h1 className="text-lg font-semibold">@{username}</h1>
-      </div>
-
-      <div className="space-y-3">
-        {visibleBlocks.map((block) => (
-          <div key={block._id} className={editable ? "pointer-events-none" : ""}>
-            <BlockRenderer block={block} />
+    <div className="rounded-2xl overflow-hidden border border-white/5">
+      <div className={`p-6 flex flex-col items-center ${editable ? "pointer-events-none" : ""}`} style={{ ...bg, fontFamily: t.font || "var(--font-body)" }}>
+        <div className={`mx-auto w-full ${maxWidth} flex flex-col items-center`}>
+          <div
+            className={`w-16 h-16 flex items-center justify-center text-xl font-display font-bold mb-3 overflow-hidden ${avatarRadius}`}
+            style={{ backgroundColor: avatarUrl ? "transparent" : accent, color: t.buttonTextColor || "#fff" }}
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+            ) : (
+              name.charAt(0).toUpperCase()
+            )}
           </div>
-        ))}
-      </div>
+          <h1 className="text-base font-display font-bold" style={{ color: accent }}>@{username}</h1>
+          {title && <p className="text-xs mt-0.5" style={{ color: accent, opacity: 0.7 }}>{title}</p>}
+          {bio && <p className="text-xs mt-2 text-center leading-relaxed" style={{ color: accent, opacity: 0.6 }}>{bio}</p>}
 
-      <div className="mt-8 text-center text-xs text-muted-foreground">
-        <a href="/" className="hover:underline">
-          LinkNest
-        </a>
+          <div className={`w-full mt-5 flex flex-col ${gap}`}>
+            {visibleBlocks.map((block, i) => (
+              <BlockRenderer key={block._id} block={block} theme={t} index={i} />
+            ))}
+          </div>
+
+          {visibleBlocks.length === 0 && (
+            <p className="text-xs mt-6 text-center" style={{ color: accent, opacity: 0.5 }}>
+              Your page is empty so far.
+            </p>
+          )}
+
+          <div className="mt-6 text-center">
+            <span className="text-[10px]" style={{ color: accent, opacity: 0.4 }}>LinkNest</span>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -1,3 +1,11 @@
-export function DividerBlock() {
-  return <hr className="border-t border-border my-2" />
+import type { BlockComponentProps } from "./block-renderer"
+import { getAccentColor } from "@/lib/theme-utils"
+
+export function DividerBlock({ theme }: BlockComponentProps) {
+  return (
+    <hr
+      className="my-2 border-t"
+      style={{ borderColor: getAccentColor(theme), opacity: 0.15 }}
+    />
+  )
 }

@@ -31,6 +31,11 @@ export default async function DashboardPage() {
       pageId={page._id.toString()}
       username={session.user.username || ""}
       initialBlocks={serializedBlocks}
+      theme={page.theme as any}
+      displayName={page.title || session.user.username || ""}
+      avatarUrl={(page as any).avatarUrl}
+      bio={page.bio}
+      title={page.title}
     />
   )
 }

@@ -7,6 +7,7 @@ import { trackPageView } from "@/lib/actions/analytics"
 import { verifyPagePassword } from "@/lib/actions/page"
 import { QRCodeCanvas } from "qrcode.react"
 import { Lock } from "lucide-react"
+import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getAccentColor, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
 
 function getThemeStyle(theme: ThemeConfig): React.CSSProperties {
   const base: React.CSSProperties = {}
@@ -21,7 +22,16 @@ function getThemeStyle(theme: ThemeConfig): React.CSSProperties {
     base.backgroundColor = theme.backgroundColor || "#ffffff"
   }
 
+  if (theme.backgroundBlur) {
+    base.backdropFilter = "blur(12px)"
+  }
+
   return base
+}
+
+/** Strip the one tag that would let custom CSS break out of its <style> element. */
+function sanitizeCustomCSS(css: string): string {
+  return css.replace(/<\/style/gi, "")
 }
 
 export function PublicPageClient({
@@ -112,19 +122,38 @@ export function PublicPageClient({
   }
 
   const bgStyle = getThemeStyle(theme)
-  const font = theme.font || "Geist"
+  const font = theme.font || "var(--font-body)"
+  const accent = getAccentColor(theme)
+  const avatarRadius = getAvatarRadius(theme)
+  const maxWidth = getLayoutMaxWidth(theme)
+  const gap = getSpacingGap(theme)
+  const anim = getEntranceAnimClass(theme)
+
+  const visibleBlocks = blocks.filter((b) => {
+    if (!b.isActive) return false
+    const now = new Date()
+    if (b.startAt && new Date(b.startAt) > now) return false
+    if (b.endAt && new Date(b.endAt) < now) return false
+    return true
+  })
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center py-12 px-4"
+      className="min-h-screen flex flex-col items-center py-14 px-4"
       style={{ ...bgStyle, fontFamily: font }}
     >
-      <div className="w-full max-w-sm mx-auto flex flex-col items-center">
+      {theme.customCSS && (
+        // eslint-disable-next-line react/no-danger
+        <style dangerouslySetInnerHTML={{ __html: sanitizeCustomCSS(theme.customCSS) }} />
+      )}
+
+      <div className={`w-full ${maxWidth} mx-auto flex flex-col items-center ${anim}`} style={getEntranceDelayStyle(0)}>
         <div
-          className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold mb-4 overflow-hidden"
+          className={`w-24 h-24 flex items-center justify-center text-3xl font-display font-bold mb-4 overflow-hidden ${avatarRadius}`}
           style={{
-            backgroundColor: avatarUrl ? "transparent" : theme.accentColor || "#000",
+            backgroundColor: avatarUrl ? "transparent" : accent,
             color: theme.buttonTextColor || "#fff",
+            boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
           }}
         >
           {avatarUrl ? (
@@ -134,36 +163,30 @@ export function PublicPageClient({
           )}
         </div>
 
-        <h1
-          className="text-xl font-bold text-center"
-          style={{ color: theme.accentColor || "#000" }}
-        >
+        <h1 className="font-display text-xl font-bold text-center" style={{ color: accent }}>
           {displayName}
         </h1>
 
         {title && (
-          <p className="text-sm text-center mt-1 opacity-70" style={{ color: theme.accentColor || "#000" }}>
+          <p className="text-sm text-center mt-1" style={{ color: accent, opacity: 0.7 }}>
             {title}
           </p>
         )}
 
         {bio && (
-          <p
-            className="text-sm text-center mt-3 leading-relaxed max-w-xs"
-            style={{ color: theme.accentColor || "#000", opacity: 0.6 }}
-          >
+          <p className="text-sm text-center mt-3 leading-relaxed max-w-xs" style={{ color: accent, opacity: 0.6 }}>
             {bio}
           </p>
         )}
 
-        <div className="w-full mt-6 space-y-3">
-          {blocks.map((block) => (
-            <BlockRenderer key={block._id} block={block} />
+        <div className={`w-full mt-7 flex flex-col ${gap}`}>
+          {visibleBlocks.map((block, i) => (
+            <BlockRenderer key={block._id} block={block} theme={theme} index={i} />
           ))}
         </div>
 
-        {blocks.length === 0 && (
-          <p className="text-sm opacity-50 mt-8 text-center" style={{ color: theme.accentColor || "#000" }}>
+        {visibleBlocks.length === 0 && (
+          <p className="text-sm mt-8 text-center" style={{ color: accent, opacity: 0.5 }}>
             This page is still being set up.
           </p>
         )}
@@ -176,8 +199,8 @@ export function PublicPageClient({
             href={pageUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs opacity-40 hover:opacity-60 transition-opacity"
-            style={{ color: theme.accentColor || "#000" }}
+            className="text-xs hover:opacity-70 transition-opacity"
+            style={{ color: accent, opacity: 0.4 }}
           >
             {pageUrl}
           </a>
@@ -187,7 +210,7 @@ export function PublicPageClient({
           <a
             href="/"
             className="text-xs hover:underline"
-            style={{ color: theme.accentColor || "#000", opacity: 0.4 }}
+            style={{ color: accent, opacity: 0.4 }}
           >
             LinkNest
           </a>

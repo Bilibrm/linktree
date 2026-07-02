@@ -1,6 +1,6 @@
 "use client"
 
-import type { IBlock } from "@/types"
+import type { IBlock, ThemeConfig } from "@/types"
 import { LinkBlock } from "./link-block"
 import { HeaderBlock } from "./header-block"
 import { TextBlock } from "./text-block"
@@ -12,7 +12,15 @@ import { EmbedBlock } from "./embed-block"
 import { FormBlock as FormBlockComponent } from "./form-block"
 import { CountdownBlock } from "./countdown-block"
 
-const renderers: Record<string, React.FC<{ data: any; blockId?: string; pageId?: string }>> = {
+export type BlockComponentProps = {
+  data: any
+  blockId?: string
+  pageId?: string
+  theme: ThemeConfig
+  index?: number
+}
+
+const renderers: Record<string, React.FC<BlockComponentProps>> = {
   link: LinkBlock,
   header: HeaderBlock,
   text: TextBlock,
@@ -25,9 +33,27 @@ const renderers: Record<string, React.FC<{ data: any; blockId?: string; pageId?:
   countdown: CountdownBlock,
 }
 
-export function BlockRenderer({ block }: { block: IBlock }) {
+const DEFAULT_THEME: ThemeConfig = { preset: "minimal" }
+
+export function BlockRenderer({
+  block,
+  theme,
+  index = 0,
+}: {
+  block: IBlock
+  theme?: ThemeConfig
+  index?: number
+}) {
   const Renderer = renderers[block.type]
   if (!Renderer) return null
 
-  return <Renderer data={block.data} blockId={block._id} pageId={block.pageId} />
+  return (
+    <Renderer
+      data={block.data}
+      blockId={block._id}
+      pageId={block.pageId}
+      theme={theme || DEFAULT_THEME}
+      index={index}
+    />
+  )
 }

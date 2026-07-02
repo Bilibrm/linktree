@@ -53,10 +53,20 @@ export function DashboardClient({
   pageId,
   username,
   initialBlocks,
+  theme,
+  displayName,
+  avatarUrl,
+  bio,
+  title,
 }: {
   pageId: string
   username: string
   initialBlocks: IBlock[]
+  theme?: import("@/types").ThemeConfig
+  displayName?: string
+  avatarUrl?: string
+  bio?: string
+  title?: string
 }) {
   const router = useRouter()
   const [blocks, setBlocks] = useState<IBlock[]>(initialBlocks)
@@ -164,7 +174,7 @@ export function DashboardClient({
             <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono">Live Preview</h3>
             <a href={`/${username}`} target="_blank" className="text-small text-gold hover:underline">Open ↗</a>
           </div>
-          <PublicPreview blocks={blocks} username={username} editable />
+          <PublicPreview blocks={blocks} username={username} theme={theme} displayName={displayName} avatarUrl={avatarUrl} bio={bio} title={title} editable />
         </div>
       </aside>
 
@@ -187,7 +197,7 @@ export function DashboardClient({
 
       {mobileView === "preview" && (
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-20">
-          <PublicPreview blocks={blocks} username={username} editable />
+          <PublicPreview blocks={blocks} username={username} theme={theme} displayName={displayName} avatarUrl={avatarUrl} bio={bio} title={title} editable />
         </div>
       )}
     </div>
