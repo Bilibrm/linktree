@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import type { IBlock, ThemeConfig } from "@/types"
 import { BlockRenderer } from "./block-renderer"
-import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
 
 export function PublicPreview({
   blocks,
@@ -30,7 +30,7 @@ export function PublicPreview({
     return true
   }), [blocks])
 
-  const t: ThemeConfig = theme || { preset: "minimal" }
+  const t: ThemeConfig = useMemo(() => theme || { preset: "minimal" }, [theme])
   const name = displayName || username
   const cssVars = useMemo(() => themeToCSSVars(t), [t])
   const bgStyle = useMemo(() => getBackgroundStyle(t), [t])
@@ -45,23 +45,27 @@ export function PublicPreview({
         style={{ ...bgStyle, ...cssVars, fontFamily: "var(--page-font-family)" }}
       >
         <div className={`mx-auto w-full ${maxWidth} flex flex-col items-center`}>
-          <div
-            className={`w-16 h-16 flex items-center justify-center text-xl font-display font-bold mb-3 overflow-hidden ${avatarRadius}`}
-            style={{ backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)", color: "var(--page-button-text)" }}
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-            ) : (
-              name.charAt(0).toUpperCase()
-            )}
+          <div className={`p-[2.5px] avatar-ring ${avatarRadius} mb-3`}>
+            <div
+              className={`w-16 h-16 flex items-center justify-center text-xl font-display font-bold overflow-hidden ${avatarRadius}`}
+              style={{ backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)", color: "var(--page-button-text)" }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                name.charAt(0).toUpperCase()
+              )}
+            </div>
           </div>
           <h1 className="text-base font-display font-bold" style={{ color: "var(--page-accent)" }}>@{username}</h1>
           {title && <p className="text-xs mt-0.5" style={{ color: "var(--page-accent)", opacity: 0.7 }}>{title}</p>}
           {bio && <p className="text-xs mt-2 text-center leading-relaxed" style={{ color: "var(--page-accent)", opacity: 0.6 }}>{bio}</p>}
 
-          <div className={`w-full mt-5 flex flex-col ${gap}`}>
+          <div className={`w-full mt-5 grid grid-cols-2 ${gap}`}>
             {visibleBlocks.map((block, i) => (
-              <BlockRenderer key={block._id} block={block} theme={t} index={i} />
+              <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
+                <BlockRenderer block={block} theme={t} index={i} />
+              </div>
             ))}
           </div>
 

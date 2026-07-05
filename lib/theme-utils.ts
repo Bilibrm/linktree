@@ -155,6 +155,17 @@ export function getFaviconUrl(url: string): string | null {
   }
 }
 
+/**
+ * Bento-grid span for a block on the public page. Links pair up two-per-row
+ * (col-span-1 on a 2-col grid) so the page reads as a mosaic instead of a
+ * stacked list; a featured link and every other block type takes the full row.
+ */
+export function getBlockSpanClass(type: string, data?: unknown): string {
+  const featured = !!(data && typeof data === "object" && "featured" in data && (data as { featured?: boolean }).featured)
+  if (type === "link" && !featured) return "col-span-1"
+  return "col-span-2"
+}
+
 
 export function themeToCSSVars(theme: ThemeConfig): React.CSSProperties {
   const vars: Record<string, string> = {}

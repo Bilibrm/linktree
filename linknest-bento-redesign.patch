@@ -1,0 +1,736 @@
+diff --git a/app/[username]/public-page-client.tsx b/app/[username]/public-page-client.tsx
+index f9392d5..1145c73 100644
+--- a/app/[username]/public-page-client.tsx
++++ b/app/[username]/public-page-client.tsx
+@@ -8,7 +8,7 @@ import { trackPageView } from "@/lib/actions/analytics"
+ import { verifyPagePassword } from "@/lib/actions/page"
+ import { QRCodeCanvas } from "qrcode.react"
+ import { Lock } from "lucide-react"
+-import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
++import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+ import { DynamicFontLoader } from "@/components/dynamic-font-loader"
+ 
+ /** Strip the one tag that would let custom CSS break out of its <style> element. */
+@@ -126,19 +126,21 @@ export function PublicPageClient({
+   const showAmbientGlow = theme.backgroundType === "solid" || !theme.backgroundType
+ 
+   const avatar = (
+-    <div
+-      className={`w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center text-3xl lg:text-4xl font-display font-bold overflow-hidden ${avatarRadius}`}
+-      style={{
+-        backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
+-        color: "var(--page-button-text)",
+-        boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
+-      }}
+-    >
+-      {avatarUrl ? (
+-        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+-      ) : (
+-        displayName.charAt(0).toUpperCase()
+-      )}
++    <div className={`p-[3px] avatar-ring ${avatarRadius}`}>
++      <div
++        className={`w-[94px] h-[94px] lg:w-[122px] lg:h-[122px] flex items-center justify-center text-3xl lg:text-4xl font-display font-bold overflow-hidden ${avatarRadius}`}
++        style={{
++          backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
++          color: "var(--page-button-text)",
++          boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
++        }}
++      >
++        {avatarUrl ? (
++          <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
++        ) : (
++          displayName.charAt(0).toUpperCase()
++        )}
++      </div>
+     </div>
+   )
+ 
+@@ -212,11 +214,15 @@ export function PublicPageClient({
+             <div className="hidden lg:block mt-8">{qrBlock}</div>
+           </div>
+ 
+-          {/* Content column */}
+-          <div className={`w-full ${maxWidth} ${desktopMaxWidth} mx-auto lg:mx-0 flex flex-col ${gap}`}>
+-            {visibleBlocks.map((block, i) => (
+-              <BlockRenderer key={block._id} block={block} theme={theme} index={i} />
+-            ))}
++          {/* Content — bento grid: links pair up two-per-row, everything else spans full width */}
++          <div className={`w-full ${maxWidth} ${desktopMaxWidth} mx-auto lg:mx-0`}>
++            <div className={`grid grid-cols-2 ${gap}`}>
++              {visibleBlocks.map((block, i) => (
++                <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
++                  <BlockRenderer block={block} theme={theme} index={i} />
++                </div>
++              ))}
++            </div>
+ 
+             {visibleBlocks.length === 0 && (
+               <p className="text-sm mt-4 text-center lg:text-left" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
+diff --git a/app/globals.css b/app/globals.css
+index 8c99f27..4e05335 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -235,3 +235,44 @@
+   width: 4px;
+   height: 4px;
+ }
++
++/* ── Bento block decorations ── */
++
++/* A soft diagonal light sweep on hover — used on link tiles/banners for a
++   crafted, tactile feel. Self-contained (no extra DOM node needed). */
++.tile-shine {
++  position: relative;
++  isolation: isolate;
++}
++.tile-shine::after {
++  content: "";
++  position: absolute;
++  inset: 0;
++  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.14) 50%, transparent 60%);
++  background-size: 250% 250%;
++  background-position: -100% -100%;
++  transition: background-position 0.8s cubic-bezier(0.16, 1, 0.3, 1);
++  pointer-events: none;
++  z-index: 1;
++}
++.tile-shine:hover::after {
++  background-position: 100% 100%;
++}
++@media (prefers-reduced-motion: reduce) {
++  .tile-shine::after { transition: none; }
++}
++
++/* Subtle gradient ring around the profile avatar, fading from the theme's
++   accent color to transparent. */
++.avatar-ring {
++  background: conic-gradient(from 200deg, var(--page-accent), transparent 65%);
++}
++
++/* Themed form inputs on the public page — border/background come from inline
++   style (theme-tinted), focus color set per-element via --input-focus-border. */
++.themed-input {
++  transition: border-color 0.2s ease, background-color 0.2s ease;
++}
++.themed-input:focus {
++  border-color: var(--input-focus-border);
++}
+diff --git a/components/blocks/countdown-block.tsx b/components/blocks/countdown-block.tsx
+index 017a59a..647e805 100644
+--- a/components/blocks/countdown-block.tsx
++++ b/components/blocks/countdown-block.tsx
+@@ -14,6 +14,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
+   const surfaceStyle = getSurfaceStyle(theme)
++  const accent = theme.accentColor || "#16302A"
+ 
+   useEffect(() => {
+     setMounted(true)
+@@ -26,24 +27,34 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+     return () => clearInterval(interval)
+   }, [targetDate])
+ 
+-  const unitBox = (value: string | number, label: string) => (
+-    <div key={label} className="text-center">
+-      <div
+-        className={`w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-xl font-bold font-mono ${cardRadius} ${shadow}`}
+-        style={{ backgroundColor: "var(--page-accent)", color: "var(--page-button-text)" }}
+-      >
+-        {value}
++  const unitBox = (value: string | number, label: string, isLast: boolean) => (
++    <div key={label} className="flex items-center gap-1.5 sm:gap-2">
++      <div className="text-center">
++        <div
++          className={`relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-xl font-bold font-mono overflow-hidden ${cardRadius} ${shadow || "shadow-md"}`}
++          style={{
++            background: `linear-gradient(155deg, ${accent}, color-mix(in srgb, ${accent} 70%, black))`,
++            color: "var(--page-button-text)",
++          }}
++        >
++          <span className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
++          <span className="relative z-[1]">{value}</span>
++        </div>
++        <span className="text-[10px] mt-1.5 block font-medium" style={{ color: "var(--page-accent)", opacity: 0.55 }}>{label}</span>
+       </div>
+-      <span className="text-[10px] mt-1 block" style={{ color: "var(--page-accent)", opacity: 0.6 }}>{label}</span>
++      {!isLast && <span className="text-lg font-bold pb-4 opacity-25" style={{ color: "var(--page-accent)" }}>:</span>}
+     </div>
+   )
+ 
+   if (!mounted) {
+     return (
+-      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, opacity: 0.6, ...delayStyle } as React.CSSProperties}>
+-        <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+-        <div className="flex justify-center gap-3 mt-3">
+-          {["Days", "Hours", "Min", "Sec"].map((label) => unitBox("00", label))}
++      <div className={`border theme-surface p-5 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, opacity: 0.6, ...delayStyle } as React.CSSProperties}>
++        <p className="text-sm font-semibold mb-3" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
++        <div className="flex justify-center">
++          {unitBox("00", "Days", false)}
++          {unitBox("00", "Hours", false)}
++          {unitBox("00", "Min", false)}
++          {unitBox("00", "Sec", true)}
+         </div>
+       </div>
+     )
+@@ -51,8 +62,8 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+ 
+   if (!targetDate || timeLeft <= 0) {
+     return (
+-      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
+-        <p className="text-lg">{data.emoji || "🎉"}</p>
++      <div className={`border theme-surface p-5 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
++        <p className="text-xl mb-1">{data.emoji || "🎉"}</p>
+         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Time&apos;s up!</p>
+       </div>
+@@ -65,14 +76,14 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+   const seconds = Math.floor((timeLeft % 60000) / 1000)
+ 
+   return (
+-    <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
+-      {data.emoji && <p className="text-lg mb-1">{data.emoji}</p>}
+-      <p className="text-sm font-semibold mb-3" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+-      <div className="flex justify-center gap-3">
+-        {unitBox(String(days).padStart(2, "0"), "Days")}
+-        {unitBox(String(hours).padStart(2, "0"), "Hours")}
+-        {unitBox(String(minutes).padStart(2, "0"), "Min")}
+-        {unitBox(String(seconds).padStart(2, "0"), "Sec")}
++    <div className={`border theme-surface p-5 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
++      {data.emoji && <p className="text-xl mb-1">{data.emoji}</p>}
++      <p className="text-sm font-semibold mb-4" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
++      <div className="flex justify-center">
++        {unitBox(String(days).padStart(2, "0"), "Days", false)}
++        {unitBox(String(hours).padStart(2, "0"), "Hours", false)}
++        {unitBox(String(minutes).padStart(2, "0"), "Min", false)}
++        {unitBox(String(seconds).padStart(2, "0"), "Sec", true)}
+       </div>
+     </div>
+   )
+diff --git a/components/blocks/divider-block.tsx b/components/blocks/divider-block.tsx
+index 950b786..6efda4f 100644
+--- a/components/blocks/divider-block.tsx
++++ b/components/blocks/divider-block.tsx
+@@ -2,10 +2,12 @@ import type { BlockComponentProps } from "./block-renderer"
+ import { getEntranceAnimClass } from "@/lib/theme-utils"
+ 
+ export function DividerBlock({ theme }: BlockComponentProps) {
++  const accent = theme.accentColor || "#16302A"
+   return (
+-    <hr
+-      className={`my-2 border-t ${getEntranceAnimClass(theme)}`}
+-      style={{ borderColor: "var(--page-accent)", opacity: 0.15 }}
+-    />
++    <div className={`flex items-center justify-center gap-1.5 py-2 ${getEntranceAnimClass(theme)}`} aria-hidden="true">
++      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent, opacity: 0.35 }} />
++      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent, opacity: 0.5 }} />
++      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent, opacity: 0.35 }} />
++    </div>
+   )
+ }
+diff --git a/components/blocks/embed-block.tsx b/components/blocks/embed-block.tsx
+index 374ae3b..ae44a4f 100644
+--- a/components/blocks/embed-block.tsx
++++ b/components/blocks/embed-block.tsx
+@@ -1,5 +1,5 @@
+ import type { BlockComponentProps } from "./block-renderer"
+-import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
++import { getCardRadius, getShadowClass, getHoverClass, getSurfaceStyle, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+ 
+ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const url = data.url || ""
+@@ -12,8 +12,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
+       if (id) return { src: `https://www.youtube.com/embed/${id}`, title: "YouTube" }
+     }
+     if (url.includes("open.spotify.com")) {
+-      const match = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)
+-      if (match) return { src: `https://open.spotify.com/embed/${match[1]}/${match[2]}`, title: "Spotify" }
++      const id = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)?.[0]
++      if (id) return { src: `https://open.spotify.com/embed/${id}`, title: "Spotify" }
+     }
+     return null
+   }
+@@ -23,17 +23,23 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const shadow = getShadowClass(theme)
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
++  const accent = theme.accentColor || "#16302A"
+ 
+   if (embed) {
+     return (
+-      <div className={`aspect-video overflow-hidden ${radius} ${shadow} ${anim}`} style={delayStyle}>
+-        <iframe
+-          src={embed.src}
+-          title={embed.title}
+-          className="w-full h-full"
+-          allowFullScreen
+-          loading="lazy"
+-        />
++      <div
++        className={`p-1.5 ${radius} ${shadow} ${anim}`}
++        style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, ...delayStyle }}
++      >
++        <div className={`aspect-video overflow-hidden ${radius}`}>
++          <iframe
++            src={embed.src}
++            title={embed.title}
++            className="w-full h-full"
++            allowFullScreen
++            loading="lazy"
++          />
++        </div>
+       </div>
+     )
+   }
+diff --git a/components/blocks/form-block.tsx b/components/blocks/form-block.tsx
+index f3a4e27..6ba748a 100644
+--- a/components/blocks/form-block.tsx
++++ b/components/blocks/form-block.tsx
+@@ -2,13 +2,12 @@
+ 
+ import { useState } from "react"
+ import { submitForm } from "@/lib/actions/form"
+-import { Input } from "@/components/ui/input"
+-import { Textarea } from "@/components/ui/textarea"
+-import { Label } from "@/components/ui/label"
+ import { toast } from "sonner"
+ import type { BlockComponentProps } from "./block-renderer"
+ import { getCardRadius, getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+ 
++type FormField = { label: string; type?: string; required?: boolean }
++
+ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
+   const [loading, setLoading] = useState(false)
+   const [submitted, setSubmitted] = useState(false)
+@@ -18,6 +17,15 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   const shadow = getShadowClass(theme)
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
++  const accent = theme.accentColor || "#16302A"
++
++  const inputStyle: React.CSSProperties = {
++    background: `color-mix(in srgb, ${accent} 5%, transparent)`,
++    borderColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
++    color: "var(--page-accent)",
++    ["--input-focus-border" as string]: `color-mix(in srgb, ${accent} 45%, transparent)`,
++  } as React.CSSProperties
++  const inputClass = "themed-input w-full rounded-lg border px-3 py-2 text-sm outline-none placeholder:opacity-40"
+ 
+   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+     e.preventDefault()
+@@ -26,7 +34,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+     setLoading(true)
+     const formData = new FormData(e.currentTarget)
+     const fieldData: Record<string, string> = {}
+-    ;(data.fields || []).forEach((field: any) => {
++    ;(data.fields || []).forEach((field: FormField) => {
+       fieldData[field.label] = (formData.get(field.label) as string) || ""
+     })
+ 
+@@ -35,7 +43,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+     submitFormData.append("pageId", pageId)
+     submitFormData.append("data", JSON.stringify(fieldData))
+ 
+-    const result: any = await submitForm(submitFormData)
++    const result = await submitForm(submitFormData) as { error?: string } | undefined
+     if (result?.error) {
+       toast.error("Failed to submit")
+     } else {
+@@ -48,28 +56,39 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   if (submitted) {
+     return (
+       <div className={`${cardRadius} ${shadow} border theme-surface p-6 text-center`} style={{ ...getSurfaceStyle(theme), opacity: 0.95 } as React.CSSProperties}>
++        <div
++          className="w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-2 text-sm"
++          style={{ backgroundColor: "var(--page-accent)", color: "var(--page-button-text)" }}
++        >
++          ✓
++        </div>
+         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>Thank you!</p>
+         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Your submission has been received.</p>
+       </div>
+     )
+   }
+ 
+-  const fields = data.fields || []
++  const fields: FormField[] = data.fields || []
+ 
+   return (
+     <div className={`${cardRadius} ${shadow} border theme-surface p-5 ${anim}`} style={{ ...getSurfaceStyle(theme), ...delayStyle } as React.CSSProperties}>
+-      {data.title && <h3 className="text-sm font-semibold mb-3 text-center" style={{ color: "var(--page-accent)" }}>{data.title}</h3>}
++      {data.title && (
++        <div className="flex items-center gap-2 mb-4">
++          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent }} />
++          <h3 className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title}</h3>
++        </div>
++      )}
+       <form onSubmit={handleSubmit} className="space-y-3">
+-        {fields.map((field: any, i: number) => (
++        {fields.map((field, i) => (
+           <div key={i} className="space-y-1">
+-            <Label className="text-xs" style={{ color: "var(--page-accent)", opacity: 0.7 }}>
++            <label className="text-xs block" style={{ color: "var(--page-accent)", opacity: 0.7 }}>
+               {field.label}
+-              {field.required && <span className="text-coral ml-0.5">*</span>}
+-            </Label>
++              {field.required && <span style={{ color: theme.buttonColor || "#DD5B39" }} className="ml-0.5">*</span>}
++            </label>
+             {field.type === "textarea" ? (
+-              <Textarea name={field.label} required={field.required} rows={3} />
++              <textarea name={field.label} required={field.required} rows={3} style={inputStyle} className={inputClass} />
+             ) : (
+-              <Input name={field.label} type={field.type === "email" ? "email" : "text"} required={field.required} />
++              <input name={field.label} type={field.type === "email" ? "email" : "text"} required={field.required} style={inputStyle} className={inputClass} />
+             )}
+           </div>
+         ))}
+@@ -77,9 +96,10 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+           type="submit"
+           disabled={loading}
+           style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)" }}
+-          className={`w-full ${btnRadius} py-2.5 text-sm font-semibold disabled:opacity-50 ${getHoverClass(theme)}`}
++          className={`tile-shine group relative w-full ${btnRadius} py-2.5 text-sm font-semibold disabled:opacity-50 overflow-hidden flex items-center justify-center gap-1.5 ${getHoverClass(theme)}`}
+         >
+-          {loading ? "Sending..." : data.buttonText || "Submit"}
++          <span className="relative z-[2]">{loading ? "Sending..." : data.buttonText || "Submit"}</span>
++          {!loading && <span className="relative z-[2] opacity-70 group-hover:translate-x-0.5 transition-transform">→</span>}
+         </button>
+       </form>
+     </div>
+diff --git a/components/blocks/gallery-block.tsx b/components/blocks/gallery-block.tsx
+index c1410bf..a4e3297 100644
+--- a/components/blocks/gallery-block.tsx
++++ b/components/blocks/gallery-block.tsx
+@@ -2,24 +2,29 @@ import type { BlockComponentProps } from "./block-renderer"
+ import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+ 
+ export function GalleryBlock({ data, theme, index = 0 }: BlockComponentProps) {
+-  const images = (data.images || []).filter((img: any) => img.src)
++  const images = (data.images || []).filter((img: { src?: string }) => img.src)
+   if (images.length === 0) return null
+ 
+   const radius = getCardRadius(theme)
+   const shadow = getShadowClass(theme)
++  const featureFirst = images.length >= 3
+ 
+   const cols = images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"
+ 
+   return (
+     <div className={`grid ${cols} gap-2 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
+-      {images.map((img: any, i: number) => (
+-        <img
++      {images.map((img: { src: string; alt?: string }, i: number) => (
++        <div
+           key={i}
+-          src={img.src}
+-          alt={img.alt || `Gallery ${i + 1}`}
+-          loading="lazy"
+-          className={`object-cover aspect-square w-full ${radius} ${shadow}`}
+-        />
++          className={`overflow-hidden aspect-square ${radius} ${shadow} ${featureFirst && i === 0 ? "col-span-2" : ""}`}
++        >
++          <img
++            src={img.src}
++            alt={img.alt || `Gallery ${i + 1}`}
++            loading="lazy"
++            className="object-cover w-full h-full transition-transform duration-500 hover:scale-[1.05]"
++          />
++        </div>
+       ))}
+     </div>
+   )
+diff --git a/components/blocks/header-block.tsx b/components/blocks/header-block.tsx
+index 9310f75..08e3659 100644
+--- a/components/blocks/header-block.tsx
++++ b/components/blocks/header-block.tsx
+@@ -11,6 +11,7 @@ export function HeaderBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const level = (data.level as keyof typeof headings) || 2
+   const text = data.text || "Header"
+   const Tag = headings[level] || "h2"
++  const accent = theme.accentColor || "#16302A"
+ 
+   const className = {
+     1: "font-display text-2xl font-bold",
+@@ -19,11 +20,11 @@ export function HeaderBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   }[level] || "font-display text-xl font-bold"
+ 
+   return (
+-    <Tag
+-      className={`${className} text-center ${getEntranceAnimClass(theme)}`}
+-      style={{ color: "var(--page-accent)", ...getEntranceDelayStyle(index) }}
+-    >
+-      {text}
+-    </Tag>
++    <div className={`flex flex-col items-center py-1 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
++      <span className="w-6 h-[3px] rounded-full mb-2.5" style={{ background: `color-mix(in srgb, ${accent} 55%, transparent)` }} />
++      <Tag className={`${className} text-center`} style={{ color: "var(--page-accent)" }}>
++        {text}
++      </Tag>
++    </div>
+   )
+ }
+diff --git a/components/blocks/image-block.tsx b/components/blocks/image-block.tsx
+index 34d01fd..6fd83f4 100644
+--- a/components/blocks/image-block.tsx
++++ b/components/blocks/image-block.tsx
+@@ -6,12 +6,14 @@ export function ImageBlock({ data, theme, index = 0 }: BlockComponentProps) {
+ 
+   return (
+     <div className={`text-center ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
+-      <img
+-        src={data.src}
+-        alt={data.alt || "Image"}
+-        loading="lazy"
+-        className={`w-full object-cover max-h-80 ${getCardRadius(theme)} ${getShadowClass(theme)}`}
+-      />
++      <div className={`overflow-hidden ${getCardRadius(theme)} ${getShadowClass(theme)}`}>
++        <img
++          src={data.src}
++          alt={data.alt || "Image"}
++          loading="lazy"
++          className="w-full object-cover max-h-80 transition-transform duration-500 hover:scale-[1.03]"
++        />
++      </div>
+       {data.caption && (
+         <p className="text-xs mt-1.5" style={{ color: "var(--page-accent)", opacity: 0.6 }}>{data.caption}</p>
+       )}
+diff --git a/components/blocks/link-block.tsx b/components/blocks/link-block.tsx
+index c3cb089..3f2a51f 100644
+--- a/components/blocks/link-block.tsx
++++ b/components/blocks/link-block.tsx
+@@ -23,15 +23,17 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
+   const faviconUrl = !data.icon && !data.thumbnailUrl ? getFaviconUrl(data.url || "") : null
++  const accent = theme.accentColor || "#16302A"
+ 
+-  const icon = data.icon ? (
+-    <PlatformIcon platform={data.icon} className={featured ? "w-5 h-5 shrink-0" : "w-4 h-4 shrink-0 opacity-80"} />
+-  ) : data.thumbnailUrl ? (
+-    <img src={data.thumbnailUrl} alt="" loading="lazy" className={`w-7 h-7 object-cover flex-shrink-0 ${radius === "rounded-full" ? "rounded-full" : "rounded-md"}`} />
+-  ) : faviconUrl ? (
+-    <img src={faviconUrl} alt="" loading="lazy" className="w-4 h-4 rounded-sm flex-shrink-0 opacity-90" />
+-  ) : null
++  const renderIcon = (size: string) => {
++    if (data.icon) return <PlatformIcon platform={data.icon} className={size} />
++    if (data.thumbnailUrl) return <img src={data.thumbnailUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
++    if (faviconUrl) return <img src={faviconUrl} alt="" loading="lazy" className="w-full h-full object-contain p-1" />
++    return null
++  }
+ 
++  // Minimal style stays a plain text link regardless of featured/tile treatment —
++  // it exists specifically for people who want no visual weight at all.
+   if (linkStyle === "minimal") {
+     return (
+       <a
+@@ -42,7 +44,7 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+         style={{ color: "var(--page-button-bg)", ...delayStyle }}
+         className={`group flex items-center justify-center gap-1.5 w-full py-2.5 ${featured ? "text-base font-bold" : "text-sm font-medium"} ${hover} ${anim}`}
+       >
+-        {icon}
++        {data.icon && <PlatformIcon platform={data.icon} className="w-4 h-4 shrink-0 opacity-70" />}
+         <span className={theme.linkHover === "underline" ? "group-hover:underline underline-offset-4" : ""}>
+           {data.title || "Untitled link"}
+         </span>
+@@ -51,30 +53,58 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+     )
+   }
+ 
++  // Featured: full-width banner, solid accent, decorative corner glow.
++  if (featured) {
++    return (
++      <a
++        href={data.url || "#"}
++        target="_blank"
++        rel="noopener noreferrer"
++        onClick={handleClick}
++        style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
++        className={`tile-shine group relative flex items-center gap-4 w-full ${radius} ${shadow || "shadow-lg"} overflow-hidden px-5 py-4 ${hover} ${anim}`}
++      >
++        <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-white/10 blur-2xl pointer-events-none" />
++        {renderIcon("w-5 h-5") && (
++          <div className="relative z-[2] w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0 overflow-hidden">
++            {renderIcon("w-5 h-5")}
++          </div>
++        )}
++        <div className="relative z-[2] flex-1 min-w-0">
++          <span className="block text-[10px] uppercase tracking-wider font-semibold opacity-60 mb-0.5">Featured</span>
++          <span className="block text-base font-bold truncate">{data.title || "Untitled link"}</span>
++        </div>
++        <span className="relative z-[2] shrink-0 opacity-70 group-hover:translate-x-1 transition-transform text-lg">↗</span>
++      </a>
++    )
++  }
++
+   const isCard = linkStyle === "card"
+-  const surfaceStyle = !featured ? getSurfaceStyle(theme) : undefined
++  const surfaceStyle = getSurfaceStyle(theme)
+ 
++  // Regular link: compact bento tile — icon on top, title below, arrow tucked
++  // in the corner. Designed to pair up two-per-row in the grid.
+   return (
+     <a
+       href={data.url || "#"}
+       target="_blank"
+       rel="noopener noreferrer"
+       onClick={handleClick}
+-      style={{
+-        ...(featured
+-          ? { backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)" }
+-          : { ...surfaceStyle, color: "var(--page-accent)" }),
+-        ...delayStyle,
+-      }}
+-      className={`group flex items-center justify-between w-full ${radius} ${
+-        featured ? `${shadow || "shadow-md"} px-5 py-4 text-base font-bold` : `border theme-surface ${isCard ? shadow || "shadow-sm" : ""} px-4 py-3.5 text-sm font-semibold`
+-      } ${hover} ${anim}`}
++      style={{ ...surfaceStyle, color: "var(--page-accent)", ...delayStyle }}
++      className={`tile-shine group relative flex flex-col justify-between gap-3 w-full h-full min-h-[112px] ${radius} border theme-surface overflow-hidden ${isCard ? shadow || "shadow-sm" : ""} p-4 ${hover} ${anim}`}
+     >
+-      <span className="flex items-center gap-3 min-w-0">
+-        {icon}
+-        <span className="truncate">{data.title || "Untitled link"}</span>
+-      </span>
+-      <span className={`flex-shrink-0 opacity-60 text-xs transition-transform ${theme.linkHover === "lift" ? "group-hover:translate-x-0.5 group-hover:-translate-y-0.5" : "group-hover:translate-x-0.5"}`}>↗</span>
++      <div className="relative z-[2] flex items-center justify-between">
++        {renderIcon("w-4 h-4") ? (
++          <div
++            className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0"
++            style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)` }}
++          >
++            {renderIcon("w-4 h-4")}
++          </div>
++        ) : <span />}
++        <span className="opacity-40 text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
++      </div>
++      <span className="relative z-[2] text-sm font-semibold leading-snug line-clamp-2">{data.title || "Untitled link"}</span>
+     </a>
+   )
+ }
+diff --git a/components/blocks/public-preview.tsx b/components/blocks/public-preview.tsx
+index 74be01c..98f566a 100644
+--- a/components/blocks/public-preview.tsx
++++ b/components/blocks/public-preview.tsx
+@@ -1,7 +1,7 @@
+ import { useMemo } from "react"
+ import type { IBlock, ThemeConfig } from "@/types"
+ import { BlockRenderer } from "./block-renderer"
+-import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
++import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+ 
+ export function PublicPreview({
+   blocks,
+@@ -30,7 +30,7 @@ export function PublicPreview({
+     return true
+   }), [blocks])
+ 
+-  const t: ThemeConfig = theme || { preset: "minimal" }
++  const t: ThemeConfig = useMemo(() => theme || { preset: "minimal" }, [theme])
+   const name = displayName || username
+   const cssVars = useMemo(() => themeToCSSVars(t), [t])
+   const bgStyle = useMemo(() => getBackgroundStyle(t), [t])
+@@ -45,23 +45,27 @@ export function PublicPreview({
+         style={{ ...bgStyle, ...cssVars, fontFamily: "var(--page-font-family)" }}
+       >
+         <div className={`mx-auto w-full ${maxWidth} flex flex-col items-center`}>
+-          <div
+-            className={`w-16 h-16 flex items-center justify-center text-xl font-display font-bold mb-3 overflow-hidden ${avatarRadius}`}
+-            style={{ backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)", color: "var(--page-button-text)" }}
+-          >
+-            {avatarUrl ? (
+-              <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+-            ) : (
+-              name.charAt(0).toUpperCase()
+-            )}
++          <div className={`p-[2.5px] avatar-ring ${avatarRadius} mb-3`}>
++            <div
++              className={`w-16 h-16 flex items-center justify-center text-xl font-display font-bold overflow-hidden ${avatarRadius}`}
++              style={{ backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)", color: "var(--page-button-text)" }}
++            >
++              {avatarUrl ? (
++                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
++              ) : (
++                name.charAt(0).toUpperCase()
++              )}
++            </div>
+           </div>
+           <h1 className="text-base font-display font-bold" style={{ color: "var(--page-accent)" }}>@{username}</h1>
+           {title && <p className="text-xs mt-0.5" style={{ color: "var(--page-accent)", opacity: 0.7 }}>{title}</p>}
+           {bio && <p className="text-xs mt-2 text-center leading-relaxed" style={{ color: "var(--page-accent)", opacity: 0.6 }}>{bio}</p>}
+ 
+-          <div className={`w-full mt-5 flex flex-col ${gap}`}>
++          <div className={`w-full mt-5 grid grid-cols-2 ${gap}`}>
+             {visibleBlocks.map((block, i) => (
+-              <BlockRenderer key={block._id} block={block} theme={t} index={i} />
++              <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
++                <BlockRenderer block={block} theme={t} index={i} />
++              </div>
+             ))}
+           </div>
+ 
+diff --git a/components/blocks/social-block.tsx b/components/blocks/social-block.tsx
+index fec5d8b..0960070 100644
+--- a/components/blocks/social-block.tsx
++++ b/components/blocks/social-block.tsx
+@@ -6,24 +6,31 @@ export function SocialBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const links = data.links || []
+   const styleClass = getSocialStyleClass(theme)
+   const filled = (theme.socialIconStyle || "outline") === "filled"
++  const accent = theme.accentColor || "#16302A"
+ 
+   return (
+     <div className={`flex justify-center flex-wrap gap-3 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
+-      {links.map((link: any, i: number) => (
++      {links.map((link: { platform: string; url: string }, i: number) => (
+         <a
+           key={i}
+           href={link.url}
+           target="_blank"
+           rel="noopener noreferrer"
+           title={link.platform}
+-          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm transition-transform duration-200 hover:-translate-y-0.5 ${styleClass}`}
+-          style={
+-            filled
++          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 ${styleClass}`}
++          style={{
++            transitionDelay: `${i * 30}ms`,
++            ...(filled
+               ? { backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)" }
+-              : { borderColor: "var(--page-accent)", color: "var(--page-accent)", opacity: (theme.socialIconStyle || "outline") === "minimal" ? 0.7 : 1 }
+-          }
++              : {
++                  background: `color-mix(in srgb, ${accent} 8%, transparent)`,
++                  borderColor: `color-mix(in srgb, ${accent} 20%, transparent)`,
++                  color: "var(--page-accent)",
++                  opacity: (theme.socialIconStyle || "outline") === "minimal" ? 0.75 : 1,
++                }),
++          }}
+         >
+-          <PlatformIcon platform={link.platform} className="w-4 h-4" />
++          <PlatformIcon platform={link.platform} className="w-[18px] h-[18px]" />
+         </a>
+       ))}
+     </div>
+diff --git a/lib/theme-utils.ts b/lib/theme-utils.ts
+index 157e570..811ad51 100644
+--- a/lib/theme-utils.ts
++++ b/lib/theme-utils.ts
+@@ -155,6 +155,17 @@ export function getFaviconUrl(url: string): string | null {
+   }
+ }
+ 
++/**
++ * Bento-grid span for a block on the public page. Links pair up two-per-row
++ * (col-span-1 on a 2-col grid) so the page reads as a mosaic instead of a
++ * stacked list; a featured link and every other block type takes the full row.
++ */
++export function getBlockSpanClass(type: string, data?: unknown): string {
++  const featured = !!(data && typeof data === "object" && "featured" in data && (data as { featured?: boolean }).featured)
++  if (type === "link" && !featured) return "col-span-1"
++  return "col-span-2"
++}
++
+ 
+ export function themeToCSSVars(theme: ThemeConfig): React.CSSProperties {
+   const vars: Record<string, string> = {}

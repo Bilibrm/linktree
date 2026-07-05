@@ -235,3 +235,44 @@
   width: 4px;
   height: 4px;
 }
+
+/* ── Bento block decorations ── */
+
+/* A soft diagonal light sweep on hover — used on link tiles/banners for a
+   crafted, tactile feel. Self-contained (no extra DOM node needed). */
+.tile-shine {
+  position: relative;
+  isolation: isolate;
+}
+.tile-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.14) 50%, transparent 60%);
+  background-size: 250% 250%;
+  background-position: -100% -100%;
+  transition: background-position 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+.tile-shine:hover::after {
+  background-position: 100% 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-shine::after { transition: none; }
+}
+
+/* Subtle gradient ring around the profile avatar, fading from the theme's
+   accent color to transparent. */
+.avatar-ring {
+  background: conic-gradient(from 200deg, var(--page-accent), transparent 65%);
+}
+
+/* Themed form inputs on the public page — border/background come from inline
+   style (theme-tinted), focus color set per-element via --input-focus-border. */
+.themed-input {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.themed-input:focus {
+  border-color: var(--input-focus-border);
+}

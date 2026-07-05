@@ -1,5 +1,5 @@
 import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+import { getCardRadius, getShadowClass, getHoverClass, getSurfaceStyle, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
 
 export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const url = data.url || ""
@@ -12,8 +12,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
       if (id) return { src: `https://www.youtube.com/embed/${id}`, title: "YouTube" }
     }
     if (url.includes("open.spotify.com")) {
-      const match = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)
-      if (match) return { src: `https://open.spotify.com/embed/${match[1]}/${match[2]}`, title: "Spotify" }
+      const id = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)?.[0]
+      if (id) return { src: `https://open.spotify.com/embed/${id}`, title: "Spotify" }
     }
     return null
   }
@@ -23,17 +23,23 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const shadow = getShadowClass(theme)
   const anim = getEntranceAnimClass(theme)
   const delayStyle = getEntranceDelayStyle(index)
+  const accent = theme.accentColor || "#16302A"
 
   if (embed) {
     return (
-      <div className={`aspect-video overflow-hidden ${radius} ${shadow} ${anim}`} style={delayStyle}>
-        <iframe
-          src={embed.src}
-          title={embed.title}
-          className="w-full h-full"
-          allowFullScreen
-          loading="lazy"
-        />
+      <div
+        className={`p-1.5 ${radius} ${shadow} ${anim}`}
+        style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, ...delayStyle }}
+      >
+        <div className={`aspect-video overflow-hidden ${radius}`}>
+          <iframe
+            src={embed.src}
+            title={embed.title}
+            className="w-full h-full"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
       </div>
     )
   }

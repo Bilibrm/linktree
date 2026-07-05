@@ -8,7 +8,7 @@ import { trackPageView } from "@/lib/actions/analytics"
 import { verifyPagePassword } from "@/lib/actions/page"
 import { QRCodeCanvas } from "qrcode.react"
 import { Lock } from "lucide-react"
-import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
 import { DynamicFontLoader } from "@/components/dynamic-font-loader"
 
 /** Strip the one tag that would let custom CSS break out of its <style> element. */
@@ -126,19 +126,21 @@ export function PublicPageClient({
   const showAmbientGlow = theme.backgroundType === "solid" || !theme.backgroundType
 
   const avatar = (
-    <div
-      className={`w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center text-3xl lg:text-4xl font-display font-bold overflow-hidden ${avatarRadius}`}
-      style={{
-        backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
-        color: "var(--page-button-text)",
-        boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
-      }}
-    >
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-      ) : (
-        displayName.charAt(0).toUpperCase()
-      )}
+    <div className={`p-[3px] avatar-ring ${avatarRadius}`}>
+      <div
+        className={`w-[94px] h-[94px] lg:w-[122px] lg:h-[122px] flex items-center justify-center text-3xl lg:text-4xl font-display font-bold overflow-hidden ${avatarRadius}`}
+        style={{
+          backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
+          color: "var(--page-button-text)",
+          boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
+        }}
+      >
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+        ) : (
+          displayName.charAt(0).toUpperCase()
+        )}
+      </div>
     </div>
   )
 
@@ -212,11 +214,15 @@ export function PublicPageClient({
             <div className="hidden lg:block mt-8">{qrBlock}</div>
           </div>
 
-          {/* Content column */}
-          <div className={`w-full ${maxWidth} ${desktopMaxWidth} mx-auto lg:mx-0 flex flex-col ${gap}`}>
-            {visibleBlocks.map((block, i) => (
-              <BlockRenderer key={block._id} block={block} theme={theme} index={i} />
-            ))}
+          {/* Content — bento grid: links pair up two-per-row, everything else spans full width */}
+          <div className={`w-full ${maxWidth} ${desktopMaxWidth} mx-auto lg:mx-0`}>
+            <div className={`grid grid-cols-2 ${gap}`}>
+              {visibleBlocks.map((block, i) => (
+                <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
+                  <BlockRenderer block={block} theme={theme} index={i} />
+                </div>
+              ))}
+            </div>
 
             {visibleBlocks.length === 0 && (
               <p className="text-sm mt-4 text-center lg:text-left" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
