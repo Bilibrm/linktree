@@ -1,5 +1,5 @@
 import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getButtonColors, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
 
 export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const url = data.url || ""
@@ -12,8 +12,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
       if (id) return { src: `https://www.youtube.com/embed/${id}`, title: "YouTube" }
     }
     if (url.includes("open.spotify.com")) {
-      const id = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)?.[0]
-      if (id) return { src: `https://open.spotify.com/embed/${id}`, title: "Spotify" }
+      const match = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)
+      if (match) return { src: `https://open.spotify.com/embed/${match[1]}/${match[2]}`, title: "Spotify" }
     }
     return null
   }
@@ -38,13 +38,12 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
     )
   }
 
-  const colors = getButtonColors(theme)
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      style={{ backgroundColor: colors.backgroundColor, color: colors.color, ...delayStyle }}
+      style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
       className={`flex items-center justify-between w-full ${radius} px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
     >
       <span>Open embedded content</span>

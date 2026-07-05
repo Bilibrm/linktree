@@ -19,6 +19,26 @@ import { Separator } from "@/components/ui/separator"
 import { PublicPreview } from "@/components/blocks/public-preview"
 import type { IBlock, ThemeConfig, ThemePreset } from "@/types"
 
+const DEFAULT_PRESET_THEME: ThemeConfig = {
+  preset: "minimal",
+  backgroundColor: "#ffffff",
+  backgroundType: "solid",
+  backgroundDirection: "135deg",
+  font: "fraunces-publicsans",
+  buttonStyle: "rounded",
+  linkStyle: "standard",
+  linkHover: "lift",
+  socialIconStyle: "outline",
+  borderRadius: "soft",
+  shadow: "subtle",
+  avatarShape: "circle",
+  layoutWidth: "normal",
+  animation: "fade",
+  backgroundBlur: false,
+  spacingDensity: "comfortable",
+  customCSS: "",
+}
+
 const presets: { name: ThemePreset; label: string; colors: { bg: string; accent: string; btn: string; text: string } }[] = [
   { name: "minimal", label: "Minimal", colors: { bg: "#ffffff", accent: "#000000", btn: "#000000", text: "#ffffff" } },
   { name: "dark", label: "Dark", colors: { bg: "#0a0a0a", accent: "#ffffff", btn: "#ffffff", text: "#0a0a0a" } },
@@ -118,6 +138,7 @@ export function AppearanceClient({
   avatarUrl,
   bio,
   title,
+  initialVisibility = "public",
 }: {
   pageId: string
   initialTheme: ThemeConfig
@@ -127,10 +148,11 @@ export function AppearanceClient({
   avatarUrl?: string
   bio?: string
   title?: string
+  initialVisibility?: string
 }) {
   const [theme, setTheme] = useState<ThemeConfig>(initialTheme)
   const [saving, setSaving] = useState(false)
-  const [visibility, setVisibility] = useState("public")
+  const [visibility, setVisibility] = useState(initialVisibility)
   const [pagePassword, setPagePassword] = useState("")
 
   async function save() {
@@ -165,13 +187,13 @@ export function AppearanceClient({
       <div className="flex flex-col xl:flex-row gap-8 items-start">
       <div className="flex-1 min-w-0 w-full">
       <Tabs defaultValue="preset" className="space-y-6">
-        <TabsList className="bg-surface border border-white/5">
-          <TabsTrigger value="preset">Themes</TabsTrigger>
-          <TabsTrigger value="colors">Colors</TabsTrigger>
-          <TabsTrigger value="styles">Styles</TabsTrigger>
-          <TabsTrigger value="layout">Layout</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
-          <TabsTrigger value="visibility">Visibility</TabsTrigger>
+        <TabsList className="bg-dashboard-surface border border-dashboard-border overflow-x-auto flex-nowrap w-full justify-start">
+          <TabsTrigger value="preset" className="flex-shrink-0">Themes</TabsTrigger>
+          <TabsTrigger value="colors" className="flex-shrink-0">Colors</TabsTrigger>
+          <TabsTrigger value="styles" className="flex-shrink-0">Styles</TabsTrigger>
+          <TabsTrigger value="layout" className="flex-shrink-0">Layout</TabsTrigger>
+          <TabsTrigger value="advanced" className="flex-shrink-0">Advanced</TabsTrigger>
+          <TabsTrigger value="visibility" className="flex-shrink-0">Visibility</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preset" className="space-y-4">
@@ -180,19 +202,17 @@ export function AppearanceClient({
               <button
                 key={p.name}
                 onClick={() => {
-                  const updated = {
-                    ...theme,
+                  setTheme({
+                    ...DEFAULT_PRESET_THEME,
                     preset: p.name,
                     backgroundColor: p.colors.bg,
                     buttonColor: p.colors.btn,
                     buttonTextColor: p.colors.text,
                     accentColor: p.colors.accent,
-                    backgroundType: "solid" as const,
-                  }
-                  setTheme(updated)
+                  })
                 }}
                 className={`rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${
-                  theme.preset === p.name ? "border-gold" : "border-white/10 hover:border-white/20"
+                  theme.preset === p.name ? "border-gold" : "border-dashboard-border hover:border-white/20"
                 }`}
               >
                 <div className="w-full h-16 rounded-lg mb-2 flex items-center justify-center text-caption font-medium" style={{ backgroundColor: p.colors.bg, color: p.colors.accent }}>Aa</div>
@@ -239,10 +259,10 @@ export function AppearanceClient({
           <div className="space-y-3">
             <Label className="text-caption">Background Type</Label>
             <Select value={theme.backgroundType || "solid"} onValueChange={(v) => updateAndSave("backgroundType", v)}>
-              <SelectTrigger className="bg-ink border-white/5">
+              <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-surface border-white/5">
+              <SelectContent className="bg-dashboard-surface border-dashboard-border">
                 <SelectItem value="solid">Solid</SelectItem>
                 <SelectItem value="gradient">Gradient</SelectItem>
                 <SelectItem value="image">Image (URL)</SelectItem>
@@ -254,10 +274,10 @@ export function AppearanceClient({
               <div className="space-y-3 pt-2">
                 <Label className="text-caption">Gradient Direction</Label>
                 <Select value={theme.backgroundDirection || "135deg"} onValueChange={(v) => updateAndSave("backgroundDirection", v)}>
-                  <SelectTrigger className="bg-ink border-white/5">
+                  <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface border-white/5">
+                  <SelectContent className="bg-dashboard-surface border-dashboard-border">
                     {bgDirectionOptions.map((d) => (
                       <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                     ))}
@@ -268,7 +288,7 @@ export function AppearanceClient({
                   value={theme.backgroundValue || ""}
                   onChange={(e) => updateAndSave("backgroundValue", e.target.value)}
                   placeholder="linear-gradient(135deg, #667eea, #764ba2)"
-                  className="h-9 bg-ink border-white/5"
+                  className="h-9 bg-dashboard-bg border-dashboard-border"
                 />
               </div>
             )}
@@ -278,7 +298,7 @@ export function AppearanceClient({
                 value={theme.backgroundValue || ""}
                 onChange={(e) => updateAndSave("backgroundValue", e.target.value)}
                 placeholder="https://images.unsplash.com/..."
-                className="h-9 bg-ink border-white/5"
+                className="h-9 bg-dashboard-bg border-dashboard-border"
               />
             )}
 
@@ -296,10 +316,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Font Pairing</Label>
               <Select value={theme.font || "geist-inter"} onValueChange={(v) => updateAndSave("font", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {fontPairs.map((f) => (
                     <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
                   ))}
@@ -309,10 +329,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Button Shape</Label>
               <Select value={theme.buttonStyle || "rounded"} onValueChange={(v) => updateAndSave("buttonStyle", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {buttonStyles.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -322,10 +342,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Link Style</Label>
               <Select value={theme.linkStyle || "standard"} onValueChange={(v) => updateAndSave("linkStyle", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {linkStyles.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -335,10 +355,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Link Hover Effect</Label>
               <Select value={theme.linkHover || "lift"} onValueChange={(v) => updateAndSave("linkHover", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {linkHoverStyles.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -348,10 +368,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Social Icon Style</Label>
               <Select value={theme.socialIconStyle || "outline"} onValueChange={(v) => updateAndSave("socialIconStyle", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {socialIconStyles.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -361,10 +381,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Avatar Shape</Label>
               <Select value={theme.avatarShape || "circle"} onValueChange={(v) => updateAndSave("avatarShape", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {avatarShapeOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -379,10 +399,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Border Radius</Label>
               <Select value={theme.borderRadius || "soft"} onValueChange={(v) => updateAndSave("borderRadius", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {borderRadiusOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -392,10 +412,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Shadow</Label>
               <Select value={theme.shadow || "subtle"} onValueChange={(v) => updateAndSave("shadow", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {shadowOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -405,10 +425,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Spacing Density</Label>
               <Select value={theme.spacingDensity || "comfortable"} onValueChange={(v) => updateAndSave("spacingDensity", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {spacingOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -418,10 +438,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Page Width</Label>
               <Select value={theme.layoutWidth || "normal"} onValueChange={(v) => updateAndSave("layoutWidth", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {layoutWidthOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -431,10 +451,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Entrance Animation</Label>
               <Select value={theme.animation || "fade"} onValueChange={(v) => updateAndSave("animation", v)}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   {animationOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
@@ -453,7 +473,7 @@ export function AppearanceClient({
               onChange={(e) => updateAndSave("customCSS", e.target.value)}
               placeholder=".my-link { border: 2px solid gold; }"
               rows={6}
-              className="w-full rounded-lg border border-white/5 bg-ink text-bone text-caption p-3 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-gold/50"
+              className="w-full rounded-lg border border-dashboard-border bg-dashboard-bg text-dashboard-text text-caption p-3 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-gold/50"
             />
           </div>
         </TabsContent>
@@ -463,10 +483,10 @@ export function AppearanceClient({
             <div className="space-y-2">
               <Label className="text-caption">Page Visibility</Label>
               <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger className="bg-ink border-white/5">
+                <SelectTrigger className="bg-dashboard-bg border-dashboard-border">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-surface border-white/5">
+                <SelectContent className="bg-dashboard-surface border-dashboard-border">
                   <SelectItem value="public">Public — anyone can view</SelectItem>
                   <SelectItem value="unlisted">Unlisted — only with direct link</SelectItem>
                   <SelectItem value="password">Password protected</SelectItem>
@@ -481,7 +501,7 @@ export function AppearanceClient({
                   value={pagePassword}
                   onChange={(e) => setPagePassword(e.target.value)}
                   placeholder="Set a shared password"
-                  className="h-9 bg-ink border-white/5"
+                  className="h-9 bg-dashboard-bg border-dashboard-border"
                 />
                 <p className="text-small text-muted-foreground">Visitors will need this password to view your page.</p>
               </div>

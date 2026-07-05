@@ -36,6 +36,7 @@ export default async function AppearancePage() {
       avatarUrl={(page as any).avatarUrl}
       bio={page.bio}
       title={page.title}
+      initialVisibility={page.visibility || "public"}
     />
   )
 }

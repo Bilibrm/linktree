@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { createBlock } from "@/lib/actions/blocks"
 import { toast } from "sonner"
-import { Plus, Link2, Type, AlignLeft, Minus, Grid3X3, Image, Images, Play, ClipboardList, Timer, Smartphone, Monitor } from "lucide-react"
+import { Plus, Link2, Type, AlignLeft, Minus, Grid3X3, Image, Images, Play, ClipboardList, Timer, Smartphone, Monitor, Loader2, ArrowLeft } from "lucide-react"
+import { editors } from "@/components/dashboard/block-editors"
 
 const blockTypes: { type: BlockType; label: string; icon: typeof Link2; description: string }[] = [
   { type: "link", label: "Link", icon: Link2, description: "A clickable link button" },
@@ -72,14 +73,18 @@ export function DashboardClient({
   const [blocks, setBlocks] = useState<IBlock[]>(initialBlocks)
   const [isAdding, setIsAdding] = useState(false)
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit")
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [selectedType, setSelectedType] = useState<BlockType | null>(null)
+  const [editData, setEditData] = useState<Record<string, any>>({})
 
-  const handleAddBlock = useCallback(
-    async (type: BlockType) => {
+  const handleCreateBlock = useCallback(
+    async () => {
+      if (!selectedType) return
       setIsAdding(true)
       const formData = new FormData()
       formData.append("pageId", pageId)
-      formData.append("type", type)
-      formData.append("data", JSON.stringify(getDefaultData(type)))
+      formData.append("type", selectedType)
+      formData.append("data", JSON.stringify(editData))
 
       const result: any = await createBlock(formData)
       if (result?.error) {
@@ -87,11 +92,18 @@ export function DashboardClient({
       } else if (result?.block) {
         setBlocks((prev) => [...prev, result.block as IBlock])
         toast.success("Block added!")
+        setShowAddDialog(false)
+        setSelectedType(null)
       }
       setIsAdding(false)
     },
-    [pageId]
+    [pageId, selectedType, editData]
   )
+
+  const handleSelectType = useCallback((type: BlockType) => {
+    setSelectedType(type)
+    setEditData(getDefaultData(type))
+  }, [])
 
   const handleBlocksChange = useCallback((newBlocks: IBlock[]) => {
     setBlocks(newBlocks)
@@ -103,56 +115,87 @@ export function DashboardClient({
         <div className="p-4 md:p-6 lg:p-8 max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <div>
-              <h1 className="font-display text-display font-bold text-bone">Your Blocks</h1>
+              <h1 className="font-display text-display font-bold text-dashboard-text">Your Blocks</h1>
               <p className="text-caption text-muted-foreground mt-0.5">
                 Add, edit, and reorder the blocks on your page.
               </p>
             </div>
-            <Dialog>
+            <Dialog open={showAddDialog} onOpenChange={(open) => { setShowAddDialog(open); if (!open) setSelectedType(null) }}>
               <DialogTrigger asChild>
                 <Button className="rounded-full bg-gold text-ink hover:bg-gold/90 gap-1.5">
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">Add block</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md bg-surface text-bone border-white/5">
+              <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-display text-heading text-bone">Add a block</DialogTitle>
+                  <DialogTitle className="font-display text-heading text-dashboard-text">
+                    {selectedType ? `Add ${blockTypes.find(bt => bt.type === selectedType)?.label || "block"}` : "Add a block"}
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-3">
-                  {blockTypes.map((bt) => {
-                    const Icon = bt.icon
-                    return (
+                {selectedType ? (
+                  <div className="space-y-4">
+                    {editors[selectedType] ? (
+                      (() => {
+                        const Editor = editors[selectedType]
+                        return <Editor data={editData} onChange={setEditData} />
+                      })()
+                    ) : (
+                      <p className="text-caption text-muted-foreground">No editor available for this block type.</p>
+                    )}
+                    <div className="flex gap-2">
                       <Button
-                        key={bt.type}
                         variant="outline"
-                        className="h-auto flex-col gap-2 py-4 px-3 bg-ink border-white/5 text-muted-foreground hover:text-bone hover:border-gold/30 hover:bg-surface transition-all"
-                        onClick={() => handleAddBlock(bt.type)}
-                        disabled={isAdding}
+                        onClick={() => setSelectedType(null)}
+                        className="flex-1 border-dashboard-border text-muted-foreground hover:text-dashboard-text"
                       >
-                        <Icon className="w-5 h-5" />
-                        <span className="text-caption font-semibold">{bt.label}</span>
-                        <span className="text-small text-muted-foreground leading-tight">{bt.description}</span>
+                        <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+                        Back
                       </Button>
-                    )
-                  })}
-                </div>
+                      <Button
+                        onClick={handleCreateBlock}
+                        disabled={isAdding}
+                        className="flex-1 bg-gold text-ink hover:bg-gold/90"
+                      >
+                        {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : `Add ${blockTypes.find(bt => bt.type === selectedType)?.label || "block"}`}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {blockTypes.map((bt) => {
+                      const Icon = bt.icon
+                      return (
+                        <Button
+                          key={bt.type}
+                          variant="outline"
+                          className="h-auto flex-col gap-2 py-4 px-3 bg-dashboard-bg border-dashboard-border text-muted-foreground hover:text-dashboard-text hover:border-gold/30 hover:bg-dashboard-surface transition-all"
+                          onClick={() => handleSelectType(bt.type)}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <span className="text-caption font-semibold">{bt.label}</span>
+                          <span className="text-small text-muted-foreground leading-tight">{bt.description}</span>
+                        </Button>
+                      )
+                    })}
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
 
           {blocks.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-12 text-center">
-              <div className="w-12 h-12 rounded-full bg-surface border border-white/5 mx-auto flex items-center justify-center mb-4">
+            <div className="rounded-xl border border-dashed border-dashboard-border p-12 text-center">
+              <div className="w-12 h-12 rounded-full bg-dashboard-surface border border-dashboard-border mx-auto flex items-center justify-center mb-4">
                 <Plus className="w-5 h-5 text-gold" />
               </div>
-              <h3 className="font-display text-heading font-semibold text-bone mb-2">Your trail starts here</h3>
+              <h3 className="font-display text-heading font-semibold text-dashboard-text mb-2">Your trail starts here</h3>
               <p className="text-caption text-muted-foreground max-w-xs mx-auto mb-6 leading-relaxed">
                 Add your first block — a link, an image, a form, or anything else you want on your page.
               </p>
               <button
-                className="inline-flex items-center gap-2 rounded-xl border border-gold/30 text-gold px-5 py-2.5 text-caption font-medium hover:bg-gold/10 transition-colors"
-                onClick={() => handleAddBlock("link")}
+                className="inline-flex items-center gap-2 rounded-xl border border-gold/30 text-gold px-5 min-h-[44px] text-caption font-medium hover:bg-gold/10 transition-colors"
+                onClick={() => { setShowAddDialog(true); handleSelectType("link") }}
               >
                 <Link2 className="w-4 h-4" />
                 Add your first link
@@ -168,7 +211,7 @@ export function DashboardClient({
         </div>
       </div>
 
-      <aside className="hidden xl:flex w-[420px] border-l border-white/5 bg-ink overflow-y-auto">
+      <aside className="hidden xl:flex w-[420px] border-l border-dashboard-border bg-dashboard-bg overflow-y-auto">
         <div className="flex-1 p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono">Live Preview</h3>
@@ -178,7 +221,7 @@ export function DashboardClient({
         </div>
       </aside>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t border-white/5 bg-ink">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t border-dashboard-border bg-dashboard-bg">
         <button
           onClick={() => setMobileView("edit")}
           className={`flex-1 py-3 text-center text-small font-medium transition-colors ${mobileView === "edit" ? "text-gold border-t-2 border-gold" : "text-muted-foreground"}`}

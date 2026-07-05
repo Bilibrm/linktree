@@ -36,13 +36,13 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
   if (loading) {
     return (
       <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-        <Skeleton className="h-8 w-48 bg-surface" />
+        <Skeleton className="h-8 w-48 bg-dashboard-surface" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl bg-surface" />
+            <Skeleton key={i} className="h-24 rounded-xl bg-dashboard-surface" />
           ))}
         </div>
-        <Skeleton className="h-64 rounded-xl bg-surface" />
+        <Skeleton className="h-64 rounded-xl bg-dashboard-surface" />
       </div>
     )
   }
@@ -56,7 +56,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="font-display text-display font-bold text-bone">Analytics</h1>
+        <h1 className="font-display text-display font-bold text-dashboard-text">Analytics</h1>
         <p className="text-caption text-muted-foreground mt-0.5">How your page is performing.</p>
       </div>
 
@@ -68,16 +68,16 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
           { label: "Clicks (7d)", value: data?.clicks7d || 0 },
           { label: "Views (7d)", value: data?.views7d || 0 },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-white/5 bg-surface/50 p-4">
+          <div key={stat.label} className="rounded-xl border border-dashboard-border bg-dashboard-surface/50 p-4">
             <p className="text-small text-muted-foreground mb-1">{stat.label}</p>
-            <p className="text-display font-bold text-bone font-mono">{stat.value.toLocaleString()}</p>
+            <p className="text-display font-bold text-dashboard-text font-mono">{stat.value.toLocaleString()}</p>
           </div>
         ))}
       </div>
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <div className="rounded-xl border border-white/5 bg-surface/30 p-4 md:p-6 mb-8">
+        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6 mb-8">
           <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Activity (14 days)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
@@ -93,7 +93,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
 
       {/* Top links + daily breakdown */}
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-white/5 bg-surface/30 p-4 md:p-6">
+        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6">
           <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Top links</h3>
           {data?.topLinks && data.topLinks.length > 0 ? (
             <div className="space-y-3">
@@ -101,7 +101,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
                 <div key={link.blockId} className="flex items-center gap-3">
                   <span className="text-small text-muted-foreground/30 font-mono w-5">{i + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-caption font-medium text-bone truncate">{link.title}</p>
+                    <p className="text-caption font-medium text-dashboard-text truncate">{link.title}</p>
                   </div>
                   <span className="text-caption font-bold text-gold font-mono">{link.clicks}</span>
                 </div>
@@ -112,7 +112,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
           )}
         </div>
 
-        <div className="rounded-xl border border-white/5 bg-surface/30 p-4 md:p-6">
+        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6">
           <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Daily breakdown</h3>
           {data?.dailyData && data.dailyData.length > 0 ? (
             <div className="space-y-1.5">
@@ -145,7 +145,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
         <a
           href={`/${username}`}
           target="_blank"
-          className="text-caption text-gold hover:text-gold/80 transition-colors"
+          className="inline-flex items-center min-h-[44px] text-caption text-gold hover:text-gold/80 transition-colors"
         >
           View your public page
         </a>

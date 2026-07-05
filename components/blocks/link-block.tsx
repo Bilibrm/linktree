@@ -2,7 +2,8 @@
 
 import { trackClick } from "@/lib/actions/analytics"
 import type { BlockComponentProps } from "./block-renderer"
-import { getButtonRadius, getShadowClass, getHoverClass, getButtonColors, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { PlatformIcon } from "./platform-icons"
 
 export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
   async function handleClick() {
@@ -20,7 +21,6 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
   const hover = getHoverClass(theme)
   const anim = getEntranceAnimClass(theme)
   const delayStyle = getEntranceDelayStyle(index)
-  const colors = getButtonColors(theme)
 
   if (linkStyle === "minimal") {
     return (
@@ -29,9 +29,10 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleClick}
-        style={{ color: colors.backgroundColor, ...delayStyle }}
+        style={{ color: "var(--page-button-bg)", ...delayStyle }}
         className={`group flex items-center justify-center gap-1.5 w-full py-2.5 text-sm font-medium ${hover} ${anim}`}
       >
+        {data.icon && <PlatformIcon platform={data.icon} className="w-4 h-4 shrink-0 opacity-70" />}
         <span className={theme.linkHover === "underline" ? "group-hover:underline underline-offset-4" : ""}>
           {data.title || "Untitled link"}
         </span>
@@ -48,10 +49,11 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      style={{ backgroundColor: colors.backgroundColor, color: colors.color, ...delayStyle }}
+      style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
       className={`group flex items-center justify-between w-full ${radius} ${isCard ? shadow || "shadow-sm" : shadow} px-4 py-3.5 text-sm font-semibold ${hover} ${anim}`}
     >
       <span className="flex items-center gap-3 min-w-0">
+        {data.icon && <PlatformIcon platform={data.icon} className="w-5 h-5 shrink-0" />}
         {data.thumbnailUrl && (
           <img src={data.thumbnailUrl} alt="" className={`w-7 h-7 object-cover flex-shrink-0 ${radius === "rounded-full" ? "rounded-full" : "rounded-md"}`} />
         )}

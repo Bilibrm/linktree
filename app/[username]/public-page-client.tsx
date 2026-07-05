@@ -1,33 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import type { IBlock, ThemeConfig } from "@/types"
 import { BlockRenderer } from "@/components/blocks/block-renderer"
 import { trackPageView } from "@/lib/actions/analytics"
 import { verifyPagePassword } from "@/lib/actions/page"
 import { QRCodeCanvas } from "qrcode.react"
 import { Lock } from "lucide-react"
-import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getAccentColor, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
-
-function getThemeStyle(theme: ThemeConfig): React.CSSProperties {
-  const base: React.CSSProperties = {}
-
-  if (theme.backgroundType === "gradient" && theme.backgroundValue) {
-    base.background = theme.backgroundValue
-  } else if (theme.backgroundType === "image" && theme.backgroundValue) {
-    base.backgroundImage = `url(${theme.backgroundValue})`
-    base.backgroundSize = "cover"
-    base.backgroundPosition = "center"
-  } else {
-    base.backgroundColor = theme.backgroundColor || "#ffffff"
-  }
-
-  if (theme.backgroundBlur) {
-    base.backdropFilter = "blur(12px)"
-  }
-
-  return base
-}
+import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+import { DynamicFontLoader } from "@/components/dynamic-font-loader"
 
 /** Strip the one tag that would let custom CSS break out of its <style> element. */
 function sanitizeCustomCSS(css: string): string {
@@ -85,6 +66,21 @@ export function PublicPageClient({
     setChecking(false)
   }
 
+  const bgStyle = getBackgroundStyle(theme)
+  const cssVars = useMemo(() => themeToCSSVars(theme), [theme])
+  const avatarRadius = getAvatarRadius(theme)
+  const maxWidth = getLayoutMaxWidth(theme)
+  const gap = getSpacingGap(theme)
+  const anim = getEntranceAnimClass(theme)
+
+  const visibleBlocks = useMemo(() => blocks.filter((b) => {
+    if (!b.isActive) return false
+    const now = new Date()
+    if (b.startAt && new Date(b.startAt) > now) return false
+    if (b.endAt && new Date(b.endAt) < now) return false
+    return true
+  }), [blocks])
+
   const locked = visibility === "password" && !unlocked
 
   if (locked) {
@@ -121,29 +117,14 @@ export function PublicPageClient({
     )
   }
 
-  const bgStyle = getThemeStyle(theme)
-  const font = theme.font || "var(--font-body)"
-  const accent = getAccentColor(theme)
-  const avatarRadius = getAvatarRadius(theme)
-  const maxWidth = getLayoutMaxWidth(theme)
-  const gap = getSpacingGap(theme)
-  const anim = getEntranceAnimClass(theme)
-
-  const visibleBlocks = blocks.filter((b) => {
-    if (!b.isActive) return false
-    const now = new Date()
-    if (b.startAt && new Date(b.startAt) > now) return false
-    if (b.endAt && new Date(b.endAt) < now) return false
-    return true
-  })
-
   return (
     <div
       className="min-h-screen flex flex-col items-center py-14 px-4"
-      style={{ ...bgStyle, fontFamily: font }}
+      style={{ ...bgStyle, ...cssVars, fontFamily: "var(--page-font-family)" }}
     >
+      <DynamicFontLoader font={theme.font} />
+
       {theme.customCSS && (
-        // eslint-disable-next-line react/no-danger
         <style dangerouslySetInnerHTML={{ __html: sanitizeCustomCSS(theme.customCSS) }} />
       )}
 
@@ -151,8 +132,8 @@ export function PublicPageClient({
         <div
           className={`w-24 h-24 flex items-center justify-center text-3xl font-display font-bold mb-4 overflow-hidden ${avatarRadius}`}
           style={{
-            backgroundColor: avatarUrl ? "transparent" : accent,
-            color: theme.buttonTextColor || "#fff",
+            backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
+            color: "var(--page-button-text)",
             boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
           }}
         >
@@ -163,18 +144,18 @@ export function PublicPageClient({
           )}
         </div>
 
-        <h1 className="font-display text-xl font-bold text-center" style={{ color: accent }}>
+        <h1 className="font-display text-xl font-bold text-center" style={{ color: "var(--page-accent)" }}>
           {displayName}
         </h1>
 
         {title && (
-          <p className="text-sm text-center mt-1" style={{ color: accent, opacity: 0.7 }}>
+          <p className="text-sm text-center mt-1" style={{ color: "var(--page-accent)", opacity: 0.7 }}>
             {title}
           </p>
         )}
 
         {bio && (
-          <p className="text-sm text-center mt-3 leading-relaxed max-w-xs" style={{ color: accent, opacity: 0.6 }}>
+          <p className="text-sm text-center mt-3 leading-relaxed max-w-xs" style={{ color: "var(--page-accent)", opacity: 0.6 }}>
             {bio}
           </p>
         )}
@@ -186,7 +167,7 @@ export function PublicPageClient({
         </div>
 
         {visibleBlocks.length === 0 && (
-          <p className="text-sm mt-8 text-center" style={{ color: accent, opacity: 0.5 }}>
+          <p className="text-sm mt-8 text-center" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
             This page is still being set up.
           </p>
         )}
@@ -200,7 +181,7 @@ export function PublicPageClient({
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs hover:opacity-70 transition-opacity"
-            style={{ color: accent, opacity: 0.4 }}
+            style={{ color: "var(--page-accent)", opacity: 0.4 }}
           >
             {pageUrl}
           </a>
@@ -210,7 +191,7 @@ export function PublicPageClient({
           <a
             href="/"
             className="text-xs hover:underline"
-            style={{ color: accent, opacity: 0.4 }}
+            style={{ color: "var(--page-accent)", opacity: 0.4 }}
           >
             LinkNest
           </a>

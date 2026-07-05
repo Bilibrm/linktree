@@ -9,6 +9,7 @@ import { logoutAction } from "@/lib/actions/auth"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Camera, Loader2, LogOut } from "lucide-react"
 import type { IUser, IPage } from "@/types"
 
@@ -29,6 +30,7 @@ export function SettingsClient({
   const [saving, setSaving] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "")
   const [uploading, setUploading] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function handleSavePage(e: React.FormEvent) {
@@ -83,22 +85,22 @@ export function SettingsClient({
     else toast.success("Profile updated!")
   }
 
-  const inputClass = "h-10 bg-ink border-white/5 text-bone text-caption focus:border-gold/50 focus:ring-gold/20"
+  const inputClass = "h-10 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20"
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="font-display text-display font-bold text-bone">Settings</h1>
+        <h1 className="font-display text-display font-bold text-dashboard-text">Settings</h1>
         <p className="text-caption text-muted-foreground mt-0.5">Your page and account.</p>
       </div>
 
       {/* Profile */}
-      <div className="rounded-xl border border-white/5 bg-surface/30 p-5 md:p-6">
-        <h2 className="text-heading font-semibold text-bone mb-4">Profile</h2>
+      <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-5 md:p-6">
+        <h2 className="text-heading font-semibold text-dashboard-text mb-4">Profile</h2>
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="relative group">
-              <div className="w-20 h-20 rounded-full bg-ink border border-white/5 overflow-hidden flex items-center justify-center text-display font-bold text-muted-foreground">
+              <div className="w-20 h-20 rounded-full bg-dashboard-bg border border-dashboard-border overflow-hidden flex items-center justify-center text-display font-bold text-muted-foreground">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -116,7 +118,7 @@ export function SettingsClient({
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
             <div>
-              <p className="text-caption font-medium text-bone">{user.name || user.username}</p>
+              <p className="text-caption font-medium text-dashboard-text">{user.name || user.username}</p>
               <p className="text-small text-muted-foreground">Click to upload photo</p>
             </div>
           </div>
@@ -140,8 +142,8 @@ export function SettingsClient({
       </div>
 
       {/* Page Settings */}
-      <div className="rounded-xl border border-white/5 bg-surface/30 p-5 md:p-6">
-        <h2 className="text-heading font-semibold text-bone mb-4">Page</h2>
+      <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-5 md:p-6">
+        <h2 className="text-heading font-semibold text-dashboard-text mb-4">Page</h2>
         <form onSubmit={handleSavePage} className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="title" className="text-small text-muted-foreground">Page title</label>
@@ -153,10 +155,10 @@ export function SettingsClient({
           </div>
           <div className="flex items-center gap-3">
             <Switch id="published" checked={isPublished} onCheckedChange={setIsPublished} />
-            <label htmlFor="published" className="text-caption text-bone">Page published</label>
+            <label htmlFor="published" className="text-caption text-dashboard-text">Page published</label>
           </div>
-          <div className="pt-4 border-t border-white/5">
-            <p className="text-caption font-semibold text-bone mb-3">SEO</p>
+          <div className="pt-4 border-t border-dashboard-border">
+            <p className="text-caption font-semibold text-dashboard-text mb-3">SEO</p>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label htmlFor="seoTitle" className="text-small text-muted-foreground">Meta title</label>
@@ -176,15 +178,25 @@ export function SettingsClient({
       </div>
 
       {/* Logout */}
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Log out"
+        description="Are you sure you want to log out? You'll need to sign in again to manage your page."
+        confirmLabel="Log out"
+        onConfirm={async () => { await logoutAction() }}
+      />
       <div className="rounded-xl border border-coral/20 bg-coral/5 p-5 md:p-6">
-        <h2 className="text-heading font-semibold text-bone mb-2">Log out</h2>
+        <h2 className="text-heading font-semibold text-dashboard-text mb-2">Log out</h2>
         <p className="text-caption text-muted-foreground mb-4">Sign out of your account.</p>
-        <form action={logoutAction}>
-          <button type="submit" className="h-10 rounded-xl border border-coral/30 text-coral text-caption font-semibold px-5 hover:bg-coral/10 transition-colors flex items-center gap-2">
-            <LogOut className="w-4 h-4" />
-            Log out
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => setShowLogoutConfirm(true)}
+          className="min-h-[44px] rounded-xl border border-coral/30 text-coral text-caption font-semibold px-5 hover:bg-coral/10 transition-colors flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Log out
+        </button>
       </div>
     </div>
   )

@@ -115,3 +115,44 @@ export function getButtonColors(theme: ThemeConfig): { backgroundColor: string; 
 export function getAccentColor(theme: ThemeConfig): string {
   return theme.accentColor || "#16302A"
 }
+
+/** Maps a ThemeConfig into CSS custom-property declarations for the public page root. */
+export function themeToCSSVars(theme: ThemeConfig): React.CSSProperties {
+  const vars: Record<string, string> = {}
+
+  vars["--page-accent"] = theme.accentColor || "#16302A"
+  vars["--page-button-bg"] = theme.buttonColor || theme.accentColor || "#16302A"
+  vars["--page-button-text"] = theme.buttonTextColor || "#F5F1E4"
+  vars["--page-font-family"] = theme.font || "var(--font-body)"
+
+  return vars as React.CSSProperties
+}
+
+/** Returns the background CSS value for the public page. */
+export function getBackgroundStyle(theme: ThemeConfig): React.CSSProperties {
+  const bg: React.CSSProperties = {}
+
+  if (theme.backgroundType === "gradient" && theme.backgroundValue) {
+    bg.background = theme.backgroundValue
+  } else if (theme.backgroundType === "image" && theme.backgroundValue) {
+    bg.backgroundImage = `url(${theme.backgroundValue})`
+    bg.backgroundSize = "cover"
+    bg.backgroundPosition = "center"
+  } else if (theme.backgroundType === "animated") {
+    if (theme.backgroundValue) {
+      bg.background = theme.backgroundValue
+    } else {
+      bg.background = `linear-gradient(${theme.backgroundDirection || "135deg"}, ${theme.accentColor || "#16302A"}, ${theme.backgroundColor || "#ffffff"})`
+    }
+    bg.backgroundSize = "200% 200%"
+    bg.animation = "gradient-shift 8s ease infinite"
+  } else {
+    bg.backgroundColor = theme.backgroundColor || "#ffffff"
+  }
+
+  if (theme.backgroundBlur && (theme.backgroundType === "gradient" || theme.backgroundType === "image")) {
+    bg.backdropFilter = "blur(12px)"
+  }
+
+  return bg
+}

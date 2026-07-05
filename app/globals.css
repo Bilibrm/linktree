@@ -40,6 +40,12 @@
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
+  --color-dashboard-bg: var(--dashboard-bg);
+  --color-dashboard-surface: var(--dashboard-surface);
+  --color-dashboard-text: var(--dashboard-text);
+  --color-dashboard-border: var(--dashboard-border);
+  --color-dashboard-bg\/50: color-mix(in srgb, var(--dashboard-bg) 50%, transparent);
+  --color-dashboard-surface\/50: color-mix(in srgb, var(--dashboard-surface) 50%, transparent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -79,6 +85,10 @@
 :root {
   --background: #E7DFC9;
   --foreground: #16302A;
+  --dashboard-bg: #E7DFC9;
+  --dashboard-surface: #DED5BD;
+  --dashboard-text: #16302A;
+  --dashboard-border: #C9BFA8;
   --card: #ECE6D6;
   --card-foreground: #16302A;
   --popover: #E7DFC9;
@@ -101,19 +111,23 @@
   --chart-4: #16302A;
   --chart-5: #0F211D;
   --radius: 0.5rem;
-  --sidebar: #17332C;
-  --sidebar-foreground: #E7DFC9;
+  --sidebar: #ECE6D6;
+  --sidebar-foreground: #16302A;
   --sidebar-primary: #D2A24C;
   --sidebar-primary-foreground: #0F211D;
-  --sidebar-accent: #0F211D;
-  --sidebar-accent-foreground: #E7DFC9;
-  --sidebar-border: #1F4038;
+  --sidebar-accent: #DED5BD;
+  --sidebar-accent-foreground: #16302A;
+  --sidebar-border: #C9BFA8;
   --sidebar-ring: #D2A24C;
 }
 
 .dark {
   --background: #0F211D;
   --foreground: #E7DFC9;
+  --dashboard-bg: #0F211D;
+  --dashboard-surface: #17332C;
+  --dashboard-text: #E7DFC9;
+  --dashboard-border: #1F4038;
   --card: #17332C;
   --card-foreground: #E7DFC9;
   --popover: #17332C;
@@ -180,4 +194,34 @@
   .theme-anim-fade, .theme-anim-slide, .theme-anim-scale {
     animation: none !important;
   }
+}
+
+/* Animated gradient background keyframes */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Custom scrollbars ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.dashboard-scroll-area::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }

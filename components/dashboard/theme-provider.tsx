@@ -18,9 +18,9 @@ export function DashboardThemeProvider({ children }: { children: React.ReactNode
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const stored = localStorage.getItem("linknest-dashboard-theme")
     if (stored === "light") setDark(false)
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function DashboardThemeProvider({ children }: { children: React.ReactNode
 
   return (
     <ThemeContext.Provider value={{ dark, toggle }}>
-      <div className={dark ? "dark" : ""}>
+      <div className={dark ? "dark" : ""} style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.15s ease" }}>
         {children}
       </div>
     </ThemeContext.Provider>

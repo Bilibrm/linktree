@@ -38,6 +38,8 @@ export async function updateMyPage(formData: FormData) {
 
   const parsed = pageSettingsSchema.safeParse({
     ...raw,
+    isPublished: raw.isPublished === "true" ? true : raw.isPublished === "false" ? false : undefined,
+    visibility: raw.visibility || undefined,
     theme: raw.theme ? JSON.parse(raw.theme as string) : undefined,
     seo: raw.seo ? JSON.parse(raw.seo as string) : undefined,
   })
