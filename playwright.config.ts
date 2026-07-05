@@ -18,10 +18,11 @@ export default defineConfig({
   projects: [
     {
       name: "auth-tests",
-      testMatch: "**/full-flow.spec.ts",
+      testMatch: ["**/full-flow.spec.ts", "**/all-blocks.spec.ts"],
       use: {
         storageState: path.join(process.cwd(), "e2e", ".auth", "user.json"),
       },
+      workers: 1,
     },
     {
       name: "public-tests",

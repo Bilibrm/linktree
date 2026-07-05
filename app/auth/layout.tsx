@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 pointer-events-none select-none">
           <svg className="w-full h-full opacity-[0.04]" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice">
             {[60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720].map((y) => (
-              <path key={y} d={`M0,${y} Q80,${y - 15} 160,${y} T320,${y} T480,${y} T600,${y}`} fill="none" stroke="#D2A24C" strokeWidth="0.5" />
+              <path key={y} d={`M0,${y} Q80,${y - 15} 160,${y} T320,${y} T480,${y} T600,${y}`} fill="none" stroke="currentColor" className="text-gold" strokeWidth="0.5" />
             ))}
           </svg>
         </div>
@@ -20,15 +20,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="w-full h-full bg-gradient-to-b from-transparent via-gold to-transparent" />
         </div>
         <div className="relative z-10">
-          <Link href="/" className="font-display font-black text-xl tracking-tight text-bone">LinkNest</Link>
+          <Link href="/"><img src="/logo.svg" alt="LinkNest" className="h-6" /></Link>
         </div>
         <div className="relative z-10 max-w-xs">
           <p className="text-body text-muted-foreground leading-relaxed">
             Your corner of the web. One page, everything you share, and the numbers to prove it works.
           </p>
         </div>
-        <div className="relative z-10 text-small text-muted-foreground/40">
-          Open source. No tracking.
+        <div className="relative z-10 text-small text-muted-foreground/40 flex items-center gap-3">
+          <span>Open source. No tracking.</span>
+          <Link href="/privacy" className="hover:text-gold transition-colors underline underline-offset-2 decoration-muted-foreground/20">Privacy</Link>
         </div>
       </div>
 
@@ -36,7 +37,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 flex flex-col bg-bone text-ink">
         {/* mobile brand header */}
         <div className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-ink/5">
-          <Link href="/" className="font-display font-black text-lg tracking-tight text-ink">LinkNest</Link>
+          <Link href="/"><img src="/logo.svg" alt="LinkNest" className="h-5" /></Link>
         </div>
         <div className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-sm">

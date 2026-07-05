@@ -163,6 +163,10 @@ export function getFaviconUrl(url: string): string | null {
 export function getBlockSpanClass(type: string, data?: unknown): string {
   const featured = !!(data && typeof data === "object" && "featured" in data && (data as { featured?: boolean }).featured)
   if (type === "link" && !featured) return "col-span-1"
+  if (type === "button") {
+    const btn = (data as { fullWidth?: boolean }) || {}
+    return btn.fullWidth ? "col-span-2" : "col-span-1"
+  }
   return "col-span-2"
 }
 

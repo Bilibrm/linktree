@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { updateBlock, deleteBlock, toggleBlockActive } from "@/lib/actions/blocks"
 import { toast } from "sonner"
 import { BlockRenderer } from "@/components/blocks/block-renderer"
-import { GripVertical, Pencil, Trash2, Check, X, Link2, Type, Minus, Grid3X3, Image, Images, Play, ClipboardList, Timer, AlignLeft } from "lucide-react"
+import { GripVertical, Pencil, Trash2, Check, X, Link2, Type, Minus, Grid3X3, Image, Images, Play, ClipboardList, Timer, AlignLeft, MousePointerClick, SquareSplitVertical, Video } from "lucide-react"
 import { editors } from "@/components/dashboard/block-editors"
 
 const typeLabels: Record<string, string> = {
@@ -23,6 +23,9 @@ const typeLabels: Record<string, string> = {
   embed: "Embed",
   form: "Form",
   countdown: "Countdown",
+  button: "Button",
+  spacer: "Spacer",
+  video: "Video",
 }
 
 const typeIcons: Record<string, typeof Link2> = {
@@ -36,6 +39,9 @@ const typeIcons: Record<string, typeof Link2> = {
   embed: Play,
   form: ClipboardList,
   countdown: Timer,
+  button: MousePointerClick,
+  spacer: SquareSplitVertical,
+  video: Video,
 }
 
 export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: { block: IBlock; pageId: string; onBlockUpdate?: (block: IBlock) => void; onBlockDelete?: (blockId: string) => void }) {
@@ -96,26 +102,27 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
       ref={setNodeRef}
       style={style}
       className={`group rounded-xl border transition-all duration-200 ${
-        isDragging ? "border-gold/30 shadow-lg shadow-gold/5 z-50" : "border-dashboard-border hover:border-dashboard-border"
-      } ${!block.isActive ? "opacity-50" : ""} bg-dashboard-surface/50`}
+        isDragging
+          ? "border-gold/40 shadow-lg shadow-gold/10 z-50 ring-1 ring-gold/20"
+          : "border-dashboard-border/60 hover:border-dashboard-border hover:shadow-sm hover:shadow-black/5"
+      } ${!block.isActive ? "opacity-50" : ""} bg-dashboard-surface/30`}
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-gold transition-colors touch-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+          suppressHydrationWarning
+          className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-gold/70 transition-colors touch-none min-h-[44px] min-w-[44px] flex items-center justify-center group/drag"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-4 h-4 group-hover/drag:scale-110 transition-transform" />
         </button>
 
-        {/* Type icon + label */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-dashboard-bg border border-dashboard-border flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/10 flex items-center justify-center flex-shrink-0 shadow-sm">
             <TypeIcon className="w-3.5 h-3.5 text-gold" />
           </div>
           <div className="min-w-0">
-            <span className="text-caption font-medium text-dashboard-text block truncate">
+            <span className="text-caption font-medium text-dashboard-text block truncate leading-tight">
               {block.type === "link" && (editData.title || block.data.link?.title || "Untitled link")}
               {block.type === "header" && (editData.text || block.data.header?.text || "Untitled header")}
               {block.type === "text" && (editData.content || block.data.text?.content || "Text block")}
@@ -126,12 +133,14 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
               {block.type === "form" && (editData.title || block.data.form?.title || "Form")}
               {block.type === "countdown" && (editData.title || block.data.countdown?.title || "Countdown")}
               {block.type === "divider" && "Divider"}
+              {block.type === "button" && (editData.label || "Button")}
+              {block.type === "spacer" && `${editData.height || 24}px spacer`}
+              {block.type === "video" && "Video"}
             </span>
-            <span className="text-small text-muted-foreground/50 block">{typeLabels[block.type]}</span>
+            <span className="text-small text-muted-foreground/40 block mt-0.5">{typeLabels[block.type]}</span>
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-1">
           <Switch checked={block.isActive} onCheckedChange={handleToggleActive} />
           {isEditing ? (
@@ -139,40 +148,44 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
               <button
                 type="button"
                 onClick={() => { setEditData(block.data as Record<string, any>); setIsEditing(false) }}
-                className="min-h-[44px] px-3 py-2 rounded-lg text-muted-foreground hover:text-dashboard-text hover:bg-white/5 text-small flex items-center gap-1.5 transition-colors"
+                className="min-h-[44px] px-3 py-2 rounded-lg text-muted-foreground hover:text-dashboard-text hover:bg-white/[0.04] text-small flex items-center gap-1.5 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={isSaving} className="min-h-[44px] px-3 py-2 rounded-lg bg-gold text-ink text-small font-medium flex items-center gap-1.5 hover:bg-gold/90 transition-colors disabled:opacity-50">
+              <button onClick={handleSave} disabled={isSaving} className="min-h-[44px] px-4 py-2 rounded-lg bg-gold text-ink text-small font-medium flex items-center gap-1.5 hover:bg-gold/90 transition-all disabled:opacity-50 shadow-sm shadow-gold/20">
                 <Check className="w-3.5 h-3.5" />
                 {isSaving ? "..." : "Save"}
               </button>
             </>
           ) : (
-            <button onClick={() => setIsEditing(true)} className="min-h-[44px] px-3 py-2 rounded-lg text-muted-foreground hover:text-dashboard-text hover:bg-white/5 text-small flex items-center gap-1.5 transition-colors">
+            <button onClick={() => setIsEditing(true)} className="min-h-[44px] px-3 py-2 rounded-lg text-muted-foreground hover:text-dashboard-text hover:bg-white/[0.04] text-small flex items-center gap-1.5 transition-colors opacity-0 group-hover:opacity-100">
               <Pencil className="w-3.5 h-3.5" />
               Edit
             </button>
           )}
-          <button onClick={() => setShowDeleteConfirm(true)} className="min-h-[44px] min-w-[44px] rounded-lg text-muted-foreground hover:text-coral hover:bg-coral/10 flex items-center justify-center transition-colors">
+          <button onClick={() => setShowDeleteConfirm(true)} aria-label="Delete block" className="min-h-[44px] min-w-[44px] rounded-lg text-muted-foreground/50 hover:text-coral hover:bg-coral/10 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Block preview when not editing */}
       {!isEditing && (
-        <div className="px-4 pb-3 pointer-events-none opacity-70">
-          <div className="rounded-lg bg-dashboard-bg/50 border border-dashboard-border p-3 scale-[0.97] origin-left">
-            <BlockRenderer block={block} />
+        <div className="px-4 pb-3">
+          <div className="rounded-lg bg-dashboard-bg/40 border border-dashboard-border/40 overflow-hidden shadow-inner">
+            <div className="scale-[0.95] origin-top opacity-80">
+              <BlockRenderer block={block} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Editor */}
       {isEditing && Editor && (
-        <div className="px-4 pb-4 pt-1 border-t border-dashboard-border">
+        <div className="px-4 pb-4 pt-3 border-t border-dashboard-border/60 space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-gold/60" />
+            <span className="text-small font-medium text-dashboard-text/70 tracking-wide">Edit {typeLabels[block.type]}</span>
+          </div>
           <Editor data={editData} onChange={setEditData} />
         </div>
       )}

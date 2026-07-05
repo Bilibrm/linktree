@@ -1,25 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-} from "recharts"
+
+const AnalyticsChart = dynamic(() => import("./analytics-chart").then((m) => ({ default: m.AnalyticsChart })), { ssr: false })
 
 gsap.registerPlugin(ScrollTrigger)
-
-const chartData = [
-  { day: "Mon", clicks: 42 },
-  { day: "Tue", clicks: 58 },
-  { day: "Wed", clicks: 87 },
-  { day: "Thu", clicks: 63 },
-  { day: "Fri", clicks: 94 },
-  { day: "Sat", clicks: 72 },
-  { day: "Sun", clicks: 51 },
-]
 
 const waypoints = [
   { id: "signup", label: "01", title: "Pick a username", desc: "No email verification. No credit card. Just a name and you are live." },
@@ -442,14 +432,14 @@ export function LandingContent() {
       <div ref={topo3Ref} className="absolute inset-0 pointer-events-none select-none overflow-hidden will-change-transform">
         <svg className="w-full h-full opacity-[0.02]" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
           {[10, 90, 160, 240, 330].map((y) => (
-            <path key={y} d={`M0,${y} Q300,${y - 25} 600,${y} T1200,${y} T1440,${y}`} fill="none" stroke="#D2A24C" strokeWidth="0.5" />
+            <path key={y} d={`M0,${y} Q300,${y - 25} 600,${y} T1200,${y} T1440,${y}`} fill="none" stroke="currentColor" className="text-gold" strokeWidth="0.5" />
           ))}
         </svg>
       </div>
 
       <div className="fixed top-0 left-0 h-full w-16 md:w-20 z-30 pointer-events-none hidden md:block will-change-transform">
         <svg className="w-full h-full" viewBox="0 0 80 2000" preserveAspectRatio="xMidYMax slice">
-          <path ref={trailRef} d="M40,0 Q60,200 40,400 T40,800 T40,1200 T40,1600 T40,2000" fill="none" stroke="#D2A24C" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          <path ref={trailRef} d="M40,0 Q60,200 40,400 T40,800 T40,1200 T40,1600 T40,2000" fill="none" stroke="currentColor" className="text-gold" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
         </svg>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full flex flex-col items-center gap-0">
           {waypoints.map((w, i) => (
@@ -460,7 +450,7 @@ export function LandingContent() {
 
       <nav ref={navRef} className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 pt-3 opacity-0" style={{ y: -20 }}>
         <div className="flex items-center justify-between w-full max-w-5xl mx-auto px-5 py-2.5 rounded-full bg-surface/70 backdrop-blur-xl border border-white/5">
-          <span className="font-display font-black text-sm tracking-tight text-bone">LinkNest</span>
+          <img src="/logo.svg" alt="LinkNest" className="h-5" />
           <div className="flex items-center gap-2">
             <Link href="/auth/login" className="text-caption text-muted-foreground hover:text-bone transition-colors px-3 py-1.5">Log in</Link>
             <Link href="/auth/signup" className="inline-flex items-center gap-1.5 rounded-full bg-gold text-ink px-3.5 py-1.5 text-caption font-semibold hover:opacity-90 transition-all">Start your page<ArrowRight className="w-3 h-3" /></Link>
@@ -661,14 +651,7 @@ export function LandingContent() {
           <h2 className="font-display text-display-lg font-black text-bone leading-[1.05] mb-4">Know which links work.</h2>
           <p className="text-body text-muted-foreground max-w-md mb-10 leading-relaxed">Click tracking, page views, referrer data. No PII — just the numbers that help you make better content.</p>
           <div className="chart-wrap rounded-xl border border-white/5 bg-surface/30 p-4 md:p-6">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData}>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#8DA89E", fontSize: 12, fontFamily: "IBM Plex Mono" }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#8DA89E", fontSize: 12, fontFamily: "IBM Plex Mono" }} />
-                <Tooltip contentStyle={{ backgroundColor: "#17332C", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#E7DFC9", fontSize: "14px" }} />
-                <Line type="monotone" dataKey="clicks" stroke="#D2A24C" strokeWidth={2} dot={{ fill: "#D2A24C", r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <AnalyticsChart />
           </div>
         </div>
       </section>
@@ -730,8 +713,11 @@ export function LandingContent() {
 
       <footer className="border-t border-white/5 px-6 py-12">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-display font-black text-sm text-bone">LinkNest</span>
-          <p className="text-caption text-muted-foreground">Open source. No tracking. No paywalls.</p>
+          <img src="/logo.svg" alt="LinkNest" className="h-5" />
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-caption text-muted-foreground hover:text-bone transition-colors">Privacy</Link>
+            <span className="text-caption text-muted-foreground">Open source. No tracking. No paywalls.</span>
+          </div>
         </div>
       </footer>
 

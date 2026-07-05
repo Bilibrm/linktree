@@ -81,11 +81,11 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
           <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Activity (14 days)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#8DA89E", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "#8DA89E", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
-              <Tooltip contentStyle={{ backgroundColor: "#17332C", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#E7DFC9", fontSize: "13px", fontFamily: "IBM Plex Mono" }} />
-              <Line type="monotone" dataKey="clicks" stroke="#D2A24C" strokeWidth={2} dot={false} name="Clicks" />
-              <Line type="monotone" dataKey="views" stroke="#8DA89E" strokeWidth={1} dot={false} name="Views" opacity={0.5} />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "var(--color-muted-foreground)", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-muted-foreground)", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
+              <Tooltip contentStyle={{ backgroundColor: "var(--color-dashboard-surface)", border: "1px solid var(--color-dashboard-border)", borderRadius: "8px", color: "var(--color-dashboard-text)", fontSize: "13px", fontFamily: "IBM Plex Mono" }} />
+              <Line type="monotone" dataKey="clicks" stroke="var(--color-gold)" strokeWidth={2} dot={false} name="Clicks" />
+              <Line type="monotone" dataKey="views" stroke="var(--color-muted-foreground)" strokeWidth={1} dot={false} name="Views" opacity={0.5} />
             </LineChart>
           </ResponsiveContainer>
         </div>

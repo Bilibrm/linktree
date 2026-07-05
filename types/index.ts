@@ -1,4 +1,4 @@
-export type BlockType = "link" | "header" | "text" | "divider" | "social" | "image" | "gallery" | "embed" | "form" | "countdown"
+export type BlockType = "link" | "header" | "text" | "divider" | "social" | "image" | "gallery" | "embed" | "form" | "countdown" | "button" | "spacer" | "video"
 
 export type ThemePreset = "minimal" | "dark" | "vibrant" | "nature" | "ocean" | "sunset" | "mono" | "bold"
 
@@ -66,6 +66,24 @@ export interface BlockData {
     title: string
     targetDate: string
     emoji?: string
+  }
+  button?: {
+    label: string
+    url: string
+    variant?: "primary" | "outline" | "ghost"
+    icon?: string
+    fullWidth?: boolean
+  }
+  spacer?: {
+    height?: number
+  }
+  video?: {
+    src: string
+    poster?: string
+    caption?: string
+    autoplay?: boolean
+    loop?: boolean
+    muted?: boolean
   }
 }
 

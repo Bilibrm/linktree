@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronsUpDown, X, XCircle } from "lucide-react"
 import { PLATFORMS, PlatformIcon } from "@/components/blocks/platform-icons"
@@ -82,7 +83,7 @@ export function LinkEditor({ data, onChange }: EditorProps) {
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-dashboard-surface border border-dashboard-border">
               <PlatformIcon platform={data.icon} className="w-4 h-4" />
               <span className="text-small text-muted-foreground capitalize">{data.icon}</span>
-              <button type="button" onClick={() => onChange({ ...data, icon: "" })} className="text-muted-foreground/50 hover:text-coral transition-colors ml-1">
+              <button type="button" onClick={() => onChange({ ...data, icon: "" })} aria-label="Clear icon" className="text-muted-foreground/50 hover:text-coral transition-colors ml-1">
                 <XCircle className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -152,7 +153,7 @@ export function SocialEditor({ data, onChange }: EditorProps) {
               <Input value={link.url} placeholder="URL" onChange={(e) => { const links = [...(data.links || [])]; links[i] = { ...links[i], url: e.target.value }; onChange({ ...data, links }) }} className="flex-1 h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
             </div>
           </div>
-          <button onClick={() => { const links = (data.links || []).filter((_: any, j: number) => j !== i); onChange({ ...data, links }) }} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-5">
+          <button onClick={() => { const links = (data.links || []).filter((_: any, j: number) => j !== i); onChange({ ...data, links }) }} aria-label="Remove social link" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-5">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -234,7 +235,7 @@ export function FormEditor({ data, onChange }: EditorProps) {
               Required
             </label>
           </div>
-          <button onClick={() => { const fields = (data.fields || []).filter((_: any, j: number) => j !== i); onChange({ ...data, fields }) }} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-6">
+          <button onClick={() => { const fields = (data.fields || []).filter((_: any, j: number) => j !== i); onChange({ ...data, fields }) }} aria-label="Remove form field" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-6">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -259,6 +260,125 @@ export function CountdownEditor({ data, onChange }: EditorProps) {
   )
 }
 
+export function ButtonEditor({ data, onChange }: EditorProps) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Label</Label>
+        <Input value={data.label || ""} onChange={(e) => onChange({ ...data, label: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">URL</Label>
+        <Input value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Variant</Label>
+        <Select value={data.variant || "primary"} onValueChange={(v) => onChange({ ...data, variant: v })}>
+          <SelectTrigger className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-dashboard-surface border-dashboard-border">
+            <SelectItem value="primary">Primary</SelectItem>
+            <SelectItem value="outline">Outline</SelectItem>
+            <SelectItem value="ghost">Ghost</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Icon (optional)</Label>
+        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 rounded-lg border border-dashboard-border bg-dashboard-bg/50">
+          {PLATFORMS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onChange({ ...data, icon: data.icon === p.id ? "" : p.id })}
+              title={p.label}
+              className={`min-h-[44px] min-w-[44px] rounded-lg flex items-center justify-center transition-all ${
+                data.icon === p.id
+                  ? "bg-gold text-ink ring-1 ring-gold"
+                  : "text-muted-foreground hover:text-dashboard-text hover:bg-dashboard-surface"
+              }`}
+            >
+              <PlatformIcon platform={p.id} className="w-4 h-4" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <Label className="text-small text-dashboard-text">Full width</Label>
+          <p className="text-small text-muted-foreground/60">Span the full row.</p>
+        </div>
+        <Switch checked={!!data.fullWidth} onCheckedChange={(checked) => onChange({ ...data, fullWidth: checked })} />
+      </div>
+    </div>
+  )
+}
+
+export function SpacerEditor({ data, onChange }: EditorProps) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-small text-muted-foreground">Height</Label>
+          <span className="text-small font-mono text-dashboard-text">{data.height || 24}px</span>
+        </div>
+        <input
+          type="range"
+          min={8}
+          max={120}
+          step={4}
+          value={data.height || 24}
+          onChange={(e) => onChange({ ...data, height: parseInt(e.target.value) })}
+          className="w-full h-2 rounded-full appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #D2A24C ${((data.height || 24) - 8) / (120 - 8) * 100}%, rgba(255,255,255,0.1) ${((data.height || 24) - 8) / (120 - 8) * 100}%)`,
+            accentColor: "#D2A24C",
+          }}
+          aria-label="Spacer height"
+        />
+        <div className="flex justify-between text-small text-muted-foreground/40 mt-1">
+          <span>8px</span>
+          <span>120px</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function VideoEditor({ data, onChange }: EditorProps) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Video URL</Label>
+        <Input value={data.src || ""} onChange={(e) => onChange({ ...data, src: e.target.value })} placeholder="https://example.com/video.mp4" className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Poster image (optional)</Label>
+        <Input value={data.poster || ""} onChange={(e) => onChange({ ...data, poster: e.target.value })} placeholder="https://example.com/poster.jpg" className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-small text-muted-foreground">Caption</Label>
+        <Input value={data.caption || ""} onChange={(e) => onChange({ ...data, caption: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
+      </div>
+      <div className="space-y-2 pt-1">
+        <div className="flex items-center justify-between">
+          <Label className="text-small text-dashboard-text">Autoplay</Label>
+          <Switch checked={!!data.autoplay} onCheckedChange={(checked) => onChange({ ...data, autoplay: checked })} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-small text-dashboard-text">Loop</Label>
+          <Switch checked={!!data.loop} onCheckedChange={(checked) => onChange({ ...data, loop: checked })} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-small text-dashboard-text">Muted</Label>
+          <Switch checked={!!data.muted} onCheckedChange={(checked) => onChange({ ...data, muted: checked })} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export const editors: Record<string, React.FC<EditorProps>> = {
   link: LinkEditor,
   header: HeaderEditor,
@@ -269,4 +389,7 @@ export const editors: Record<string, React.FC<EditorProps>> = {
   embed: EmbedEditor,
   form: FormEditor,
   countdown: CountdownEditor,
+  button: ButtonEditor,
+  spacer: SpacerEditor,
+  video: VideoEditor,
 }

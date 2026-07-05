@@ -1,0 +1,112 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e7]: T
+        - heading "Test User" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Test User
+        - paragraph [ref=e10]: 13 items
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - link "My Portfolio" [ref=e14] [cursor=pointer]:
+            - /url: https://example.com
+            - img [ref=e17]
+            - generic [ref=e20]: My Portfolio
+          - heading "Welcome to my corner of the web" [level=2] [ref=e24]
+          - paragraph [ref=e27]: I build things for the web.
+          - link "twitter" [ref=e38] [cursor=pointer]:
+            - /url: https://twitter.com/me
+            - img [ref=e40]
+          - generic [ref=e43]:
+            - img "Image" [ref=e45]
+            - paragraph [ref=e46]: A beautiful landscape
+          - generic [ref=e48]:
+            - img "Gallery 1" [ref=e50]
+            - img "Gallery 2" [ref=e52]
+          - iframe [ref=e56]:
+            - generic [active] [ref=f1e1]:
+              - generic "Lecteur vidéo YouTube" [ref=f1e3]
+              - generic [ref=f1e5]:
+                - generic:
+                  - generic:
+                    - button "Regarder la vidéo" [ref=f1e10] [cursor=pointer]
+                    - button "Masquer les commandes du lecteur" [ref=f1e12] [cursor=pointer]
+                    - generic [ref=f1e14]:
+                      - generic [ref=f1e19]:
+                        - generic [ref=f1e20]:
+                          - link "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)" [ref=f1e21] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                          - link "Rick Astley" [ref=f1e22] [cursor=pointer]:
+                            - /url: /channel/UCuAXFkgsw1L7xaCfnd5JJOw
+                            - generic [ref=f1e23]: Rick Astley
+                        - generic [ref=f1e24]:
+                          - button [ref=f1e25] [cursor=pointer]
+                          - generic [ref=f1e27]:
+                            - generic: Rick Astley
+                            - generic: 4,51 M d’abonnés
+                      - generic [ref=f1e28]:
+                        - button "Partager" [ref=f1e31] [cursor=pointer]:
+                          - generic [ref=f1e35]:
+                            - img
+                        - link "Regarder sur YouTube" [ref=f1e42] [cursor=pointer]:
+                          - /url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                          - generic [ref=f1e45]:
+                            - text: Regarder sur
+                            - img [ref=f1e47]:
+                              - generic [ref=f1e49]:
+                                - img
+          - generic [ref=e58]:
+            - generic [ref=e59]:
+              - img [ref=e61]
+              - heading "Get in touch" [level=3] [ref=e64]
+            - generic [ref=e65]:
+              - generic [ref=e66]:
+                - generic [ref=e67]: Name*
+                - textbox [ref=e68]
+              - generic [ref=e69]:
+                - generic [ref=e70]: Email
+                - textbox [ref=e71]
+              - button "Submit" [ref=e72]:
+                - generic [ref=e73]: Submit
+                - img [ref=e74]
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - img [ref=e80]
+              - paragraph [ref=e83]: Launch Countdown
+            - generic [ref=e84]:
+              - generic [ref=e85]:
+                - generic [ref=e86]:
+                  - generic [ref=e88]: "29"
+                  - generic [ref=e89]: Days
+                - generic [ref=e90]: ":"
+              - generic [ref=e91]:
+                - generic [ref=e92]:
+                  - generic [ref=e94]: "22"
+                  - generic [ref=e95]: Hours
+                - generic [ref=e96]: ":"
+              - generic [ref=e97]:
+                - generic [ref=e98]:
+                  - generic [ref=e100]: "58"
+                  - generic [ref=e101]: Min
+                - generic [ref=e102]: ":"
+              - generic [ref=e104]:
+                - generic [ref=e106]: "48"
+                - generic [ref=e107]: Sec
+          - link "Visit My Site" [ref=e109] [cursor=pointer]:
+            - /url: https://myportfolio.com
+            - generic [ref=e110]: Visit My Site
+            - img [ref=e111]
+          - generic [ref=e116]:
+            - button "Play video" [ref=e119]:
+              - img [ref=e121]
+            - paragraph [ref=e123]: Big Buck Bunny
+        - link "LinkNest" [ref=e125] [cursor=pointer]:
+          - /url: /
+    - generic [ref=e127]:
+      - img [ref=e129]
+      - link "http://localhost:3000/test-1783262545244" [ref=e130] [cursor=pointer]:
+        - /url: http://localhost:3000/test-1783262545244
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e136] [cursor=pointer]:
+    - img [ref=e137]
+  - alert [ref=e140]

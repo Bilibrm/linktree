@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth"
 import { connectDB } from "@/lib/db/mongoose"
 import { Page } from "@/lib/models/page"
 import { User } from "@/lib/models/user"
-import { pageSettingsSchema } from "@/lib/validation"
+import { pageSettingsSchema, updateProfileSchema } from "@/lib/validation"
 import { revalidatePath } from "next/cache"
 import bcrypt from "bcryptjs"
 
@@ -89,12 +89,13 @@ export async function updateMyProfile(formData: FormData) {
   const userId = session.user.id
   const raw = Object.fromEntries(formData)
 
-  await connectDB()
-  const updates: Record<string, unknown> = {}
-  if (raw.name) updates.name = raw.name
-  if (raw.avatarUrl) updates.avatarUrl = raw.avatarUrl
+  const parsed = updateProfileSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors }
+  }
 
-  await User.findByIdAndUpdate(userId, updates)
+  await connectDB()
+  await User.findByIdAndUpdate(userId, parsed.data)
   revalidatePath("/dashboard")
   return { success: true }
 }

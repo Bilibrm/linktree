@@ -11,6 +11,9 @@ import { GalleryBlock } from "./gallery-block"
 import { EmbedBlock } from "./embed-block"
 import { FormBlock as FormBlockComponent } from "./form-block"
 import { CountdownBlock } from "./countdown-block"
+import { ButtonBlock } from "./button-block"
+import { SpacerBlock } from "./spacer-block"
+import { VideoBlock } from "./video-block"
 
 export type BlockComponentProps = {
   data: any
@@ -31,6 +34,9 @@ const renderers: Record<string, React.FC<BlockComponentProps>> = {
   embed: EmbedBlock,
   form: FormBlockComponent,
   countdown: CountdownBlock,
+  button: ButtonBlock,
+  spacer: SpacerBlock,
+  video: VideoBlock,
 }
 
 const DEFAULT_THEME: ThemeConfig = { preset: "minimal" }

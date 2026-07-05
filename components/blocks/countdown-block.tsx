@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import type { BlockComponentProps } from "./block-renderer"
 import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+import { Timer, Clock } from "lucide-react"
 
 export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const targetDate = data.targetDate ? new Date(data.targetDate).getTime() : 0
@@ -19,7 +20,6 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
   useEffect(() => {
     setMounted(true)
     setTimeLeft(targetDate - Date.now())
-
     if (!targetDate) return
     const interval = setInterval(() => {
       setTimeLeft(targetDate - Date.now())
@@ -38,11 +38,12 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
           }}
         >
           <span className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
-          <span className="relative z-[1]">{value}</span>
+          <span className="absolute inset-0 ring-1 ring-inset ring-white/[0.08] rounded-inherit pointer-events-none" />
+          <span className="relative z-[1] tabular-nums">{value}</span>
         </div>
-        <span className="text-[10px] mt-1.5 block font-medium" style={{ color: "var(--page-accent)", opacity: 0.55 }}>{label}</span>
+        <span className="text-[10px] mt-1.5 block font-medium tracking-wide" style={{ color: "var(--page-accent)", opacity: 0.5 }}>{label}</span>
       </div>
-      {!isLast && <span className="text-lg font-bold pb-4 opacity-25" style={{ color: "var(--page-accent)" }}>:</span>}
+      {!isLast && <span className="text-lg font-bold pb-4" style={{ color: "var(--page-accent)", opacity: 0.2 }}>:</span>}
     </div>
   )
 
@@ -62,10 +63,16 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
 
   if (!targetDate || timeLeft <= 0) {
     return (
-      <div className={`border theme-surface p-5 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
-        <p className="text-xl mb-1">{data.emoji || "🎉"}</p>
+      <div className={`border theme-surface p-6 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
+          {data.emoji ? (
+            <span className="text-2xl">{data.emoji}</span>
+          ) : (
+            <Clock className="w-5 h-5" style={{ color: accent, opacity: 0.5 }} />
+          )}
+        </div>
         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
-        <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Time&apos;s up!</p>
+        <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.55 }}>Time&apos;s up!</p>
       </div>
     )
   }
@@ -77,8 +84,10 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
 
   return (
     <div className={`border theme-surface p-5 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
-      {data.emoji && <p className="text-xl mb-1">{data.emoji}</p>}
-      <p className="text-sm font-semibold mb-4" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <Timer className="w-4 h-4" style={{ color: accent, opacity: 0.5 }} />
+        <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+      </div>
       <div className="flex justify-center">
         {unitBox(String(days).padStart(2, "0"), "Days", false)}
         {unitBox(String(hours).padStart(2, "0"), "Hours", false)}

@@ -58,6 +58,9 @@ export async function getAnalytics(pageId: string) {
 
   await connectDB()
 
+  const page = await (await import("@/lib/models/page")).Page.findOne({ _id: pageId, userId: session.user.id })
+  if (!page) throw new Error("Unauthorized")
+
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 

@@ -14,15 +14,15 @@ export function HeaderBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const accent = theme.accentColor || "#16302A"
 
   const className = {
-    1: "font-display text-2xl font-bold",
-    2: "font-display text-xl font-bold",
-    3: "font-display text-lg font-semibold",
-  }[level] || "font-display text-xl font-bold"
+    1: "font-display text-[26px] lg:text-[30px] font-bold tracking-tight",
+    2: "font-display text-xl lg:text-2xl font-bold tracking-tight",
+    3: "font-display text-lg lg:text-xl font-semibold tracking-tight",
+  }[level] || "font-display text-xl font-bold tracking-tight"
 
   return (
-    <div className={`flex flex-col items-center py-1 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
-      <span className="w-6 h-[3px] rounded-full mb-2.5" style={{ background: `color-mix(in srgb, ${accent} 55%, transparent)` }} />
-      <Tag className={`${className} text-center`} style={{ color: "var(--page-accent)" }}>
+    <div className={`flex flex-col items-center py-2 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
+      <span className="w-8 h-[3px] rounded-full mb-3" style={{ background: `color-mix(in srgb, ${accent} 40%, transparent)` }} />
+      <Tag className={`${className} text-center leading-tight`} style={{ color: "var(--page-accent)" }}>
         {text}
       </Tag>
     </div>

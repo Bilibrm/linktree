@@ -294,12 +294,15 @@ export function AppearanceClient({
             )}
 
             {theme.backgroundType === "image" && (
-              <Input
-                value={theme.backgroundValue || ""}
-                onChange={(e) => updateAndSave("backgroundValue", e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-                className="h-9 bg-dashboard-bg border-dashboard-border"
-              />
+              <div className="space-y-1.5">
+                <Label className="text-caption">Background image URL</Label>
+                <Input
+                  value={theme.backgroundValue || ""}
+                  onChange={(e) => updateAndSave("backgroundValue", e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="h-9 bg-dashboard-bg border-dashboard-border"
+                />
+              </div>
             )}
 
             {(theme.backgroundType === "gradient" || theme.backgroundType === "image") && (

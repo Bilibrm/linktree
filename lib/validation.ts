@@ -87,11 +87,29 @@ export const blockDataSchemas = {
     targetDate: z.string().min(1, "Target date is required"),
     emoji: z.string().max(10).optional(),
   }),
+  button: z.object({
+    label: z.string().min(1).max(100),
+    url: z.string().url("Invalid URL").max(2000),
+    variant: z.union([z.literal("primary"), z.literal("outline"), z.literal("ghost")]).optional().default("primary"),
+    icon: z.string().max(100).optional(),
+    fullWidth: z.boolean().optional().default(false),
+  }),
+  spacer: z.object({
+    height: z.number().int().min(8).max(120).optional().default(24),
+  }),
+  video: z.object({
+    src: z.string().url("Invalid URL").max(2000),
+    poster: z.string().max(2000).optional(),
+    caption: z.string().max(200).optional(),
+    autoplay: z.boolean().optional().default(false),
+    loop: z.boolean().optional().default(false),
+    muted: z.boolean().optional().default(false),
+  }),
 } as const
 
 export const createBlockSchema = z.object({
   pageId: z.string().min(1),
-  type: z.enum(["link", "header", "text", "divider", "social", "image", "gallery", "embed", "form", "countdown"]),
+  type: z.enum(["link", "header", "text", "divider", "social", "image", "gallery", "embed", "form", "countdown", "button", "spacer", "video"]),
   data: z.record(z.string(), z.unknown()),
   order: z.number().int().min(0).optional(),
   startAt: z.string().nullable().optional(),
@@ -160,6 +178,11 @@ export const formSubmissionSchema = z.object({
   blockId: z.string().min(1),
   pageId: z.string().min(1),
   data: z.record(z.string(), z.string()),
+})
+
+export const updateProfileSchema = z.object({
+  name: z.string().max(60).optional(),
+  avatarUrl: z.string().max(2000).optional(),
 })
 
 export const trackClickSchema = z.object({

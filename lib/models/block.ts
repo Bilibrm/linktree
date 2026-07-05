@@ -15,7 +15,7 @@ export interface IBlockDocument extends Document {
 const blockSchema = new Schema<IBlockDocument>(
   {
     pageId: { type: Schema.Types.ObjectId, ref: "Page", required: true, index: true },
-    type: { type: String, required: true, enum: ["link", "header", "text", "divider", "social", "image", "gallery", "embed", "form", "countdown"] },
+    type: { type: String, required: true, enum: ["link", "header", "text", "divider", "social", "image", "gallery", "embed", "form", "countdown", "button", "spacer", "video"] },
     order: { type: Number, required: true, default: 0 },
     data: { type: Schema.Types.Mixed, default: {} },
     startAt: { type: Date, default: null },

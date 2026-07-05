@@ -1,5 +1,6 @@
 import type { BlockComponentProps } from "./block-renderer"
 import { getCardRadius, getShadowClass, getHoverClass, getSurfaceStyle, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { ExternalLink } from "lucide-react"
 
 export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const url = data.url || ""
@@ -28,8 +29,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   if (embed) {
     return (
       <div
-        className={`p-1.5 ${radius} ${shadow} ${anim}`}
-        style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, ...delayStyle }}
+        className={`p-1 ${radius} ${shadow} ${anim}`}
+        style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, ...delayStyle }}
       >
         <div className={`aspect-video overflow-hidden ${radius}`}>
           <iframe
@@ -50,10 +51,10 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
       target="_blank"
       rel="noopener noreferrer"
       style={{ ...getSurfaceStyle(theme), color: "var(--page-accent)", ...delayStyle }}
-      className={`flex items-center justify-between w-full ${radius} border theme-surface px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
+      className={`group flex items-center justify-between w-full ${radius} border theme-surface px-4 py-3.5 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
     >
-      <span>Open embedded content</span>
-      <span className="opacity-60">↗</span>
+      <span className="truncate">{url.replace(/^https?:\/\//, "").slice(0, 40)}</span>
+      <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-70 transition-opacity ml-2" />
     </a>
   )
 }

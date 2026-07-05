@@ -69,12 +69,14 @@ export function DashboardSidebar({ username, pageId }: { username: string; pageI
       <div className="px-2 pb-4 space-y-1">
         <button
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={`flex items-center gap-3 rounded-lg px-3 min-h-[44px] text-caption text-muted-foreground hover:text-foreground hover:bg-sidebar-accent w-full transition-all ${collapsed ? "justify-center px-2" : ""}`}
         >
           {collapsed ? <PanelLeft className="w-4 h-4" /> : <><PanelLeftClose className="w-4 h-4" /> Collapse</>}
         </button>
         <button
           onClick={toggle}
+          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
           className={`flex items-center gap-3 rounded-lg px-3 min-h-[44px] text-caption text-muted-foreground hover:text-foreground hover:bg-sidebar-accent w-full transition-all ${collapsed ? "justify-center px-2" : ""}`}
         >
           {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -113,8 +115,8 @@ export function DashboardSidebar({ username, pageId }: { username: string; pageI
         onConfirm={handleLogout}
       />
       <Sheet>
-        <SheetTrigger asChild className="md:hidden fixed top-3 left-3 z-50">
-          <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] text-foreground">
+        <SheetTrigger asChild className="md:hidden fixed z-50" style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)", left: "calc(env(safe-area-inset-left, 0px) + 0.75rem)" }}>
+          <Button variant="ghost" size="icon" aria-label="Open navigation menu" className="min-h-[44px] min-w-[44px] text-foreground">
             <Menu className="w-4 h-4" />
           </Button>
         </SheetTrigger>
