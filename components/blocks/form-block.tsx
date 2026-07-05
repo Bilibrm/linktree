@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { getCardRadius, getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
 
 export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
   const [loading, setLoading] = useState(false)
@@ -47,7 +47,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
 
   if (submitted) {
     return (
-      <div className={`${cardRadius} ${shadow} border p-6 text-center`} style={{ borderColor: "var(--page-accent)", opacity: 0.9 } as React.CSSProperties}>
+      <div className={`${cardRadius} ${shadow} border theme-surface p-6 text-center`} style={{ ...getSurfaceStyle(theme), opacity: 0.95 } as React.CSSProperties}>
         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>Thank you!</p>
         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Your submission has been received.</p>
       </div>
@@ -57,7 +57,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
   const fields = data.fields || []
 
   return (
-    <div className={`${cardRadius} ${shadow} border p-4 ${anim}`} style={{ borderColor: "var(--page-accent)", ...delayStyle } as React.CSSProperties}>
+    <div className={`${cardRadius} ${shadow} border theme-surface p-5 ${anim}`} style={{ ...getSurfaceStyle(theme), ...delayStyle } as React.CSSProperties}>
       {data.title && <h3 className="text-sm font-semibold mb-3 text-center" style={{ color: "var(--page-accent)" }}>{data.title}</h3>}
       <form onSubmit={handleSubmit} className="space-y-3">
         {fields.map((field: any, i: number) => (

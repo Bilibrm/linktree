@@ -26,6 +26,7 @@ export const blockDataSchemas = {
     url: z.string().url("Invalid URL").max(2000),
     icon: z.string().max(100).optional(),
     thumbnailUrl: z.string().max(2000).optional(),
+    featured: z.boolean().optional(),
   }),
   header: z.object({
     text: z.string().min(1).max(200),

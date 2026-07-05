@@ -43,6 +43,12 @@ const LAYOUT_WIDTH: Record<string, string> = {
   wide: "max-w-md",
 }
 
+const DESKTOP_CONTENT_WIDTH: Record<string, string> = {
+  narrow: "lg:max-w-sm",
+  normal: "lg:max-w-md",
+  wide: "lg:max-w-xl",
+}
+
 const ANIM_CLASS: Record<string, string> = {
   none: "",
   fade: "theme-anim-fade",
@@ -87,6 +93,11 @@ export function getLayoutMaxWidth(theme: ThemeConfig): string {
   return LAYOUT_WIDTH[theme.layoutWidth || "normal"] || LAYOUT_WIDTH.normal
 }
 
+/** The content column's max-width at the lg+ breakpoint, used alongside getLayoutMaxWidth's mobile value. */
+export function getDesktopContentMaxWidth(theme: ThemeConfig): string {
+  return DESKTOP_CONTENT_WIDTH[theme.layoutWidth || "normal"] || DESKTOP_CONTENT_WIDTH.normal
+}
+
 export function getEntranceAnimClass(theme: ThemeConfig): string {
   return ANIM_CLASS[theme.animation || "none"] ?? ""
 }
@@ -116,7 +127,35 @@ export function getAccentColor(theme: ThemeConfig): string {
   return theme.accentColor || "#16302A"
 }
 
-/** Maps a ThemeConfig into CSS custom-property declarations for the public page root. */
+/**
+ * A theme-tinted "glass" surface for card-like blocks (non-featured links, forms,
+ * countdown, embed fallback). Tinted from the theme's own accent color via color-mix,
+ * so it always reads as on-brand regardless of the page's background color/image —
+ * no light/dark detection needed. Sets its own hover-target CSS var so the ".theme-surface"
+ * hover state works without depending on any ancestor providing theme CSS vars.
+ */
+export function getSurfaceStyle(theme: ThemeConfig): React.CSSProperties {
+  const accent = theme.accentColor || "#16302A"
+  return {
+    background: `color-mix(in srgb, ${accent} 7%, transparent)`,
+    borderColor: `color-mix(in srgb, ${accent} 16%, transparent)`,
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+    ["--surface-hover-bg" as string]: `color-mix(in srgb, ${accent} 13%, transparent)`,
+  } as React.CSSProperties
+}
+
+/** Google's public favicon service — no API key, used as a fallback icon for link blocks that have no explicit platform icon or thumbnail. */
+export function getFaviconUrl(url: string): string | null {
+  try {
+    const { hostname } = new URL(url)
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`
+  } catch {
+    return null
+  }
+}
+
+
 export function themeToCSSVars(theme: ThemeConfig): React.CSSProperties {
   const vars: Record<string, string> = {}
 

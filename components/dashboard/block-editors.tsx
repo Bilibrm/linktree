@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronsUpDown, X, XCircle } from "lucide-react"
 import { PLATFORMS, PlatformIcon } from "@/components/blocks/platform-icons"
@@ -104,6 +105,13 @@ export function LinkEditor({ data, onChange }: EditorProps) {
             </button>
           ))}
         </div>
+      </div>
+      <div className="flex items-center justify-between pt-1 pb-0.5">
+        <div>
+          <Label className="text-small text-dashboard-text">Featured</Label>
+          <p className="text-small text-muted-foreground/60">Stand out from your other links.</p>
+        </div>
+        <Switch checked={!!data.featured} onCheckedChange={(checked) => onChange({ ...data, featured: checked })} />
       </div>
     </div>
   )

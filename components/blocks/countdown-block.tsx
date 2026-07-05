@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
 
 export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const targetDate = data.targetDate ? new Date(data.targetDate).getTime() : 0
@@ -13,6 +13,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
   const shadow = getShadowClass(theme)
   const anim = getEntranceAnimClass(theme)
   const delayStyle = getEntranceDelayStyle(index)
+  const surfaceStyle = getSurfaceStyle(theme)
 
   useEffect(() => {
     setMounted(true)
@@ -39,7 +40,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
 
   if (!mounted) {
     return (
-      <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", opacity: 0.5, ...delayStyle } as React.CSSProperties}>
+      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, opacity: 0.6, ...delayStyle } as React.CSSProperties}>
         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
         <div className="flex justify-center gap-3 mt-3">
           {["Days", "Hours", "Min", "Sec"].map((label) => unitBox("00", label))}
@@ -50,7 +51,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
 
   if (!targetDate || timeLeft <= 0) {
     return (
-      <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", ...delayStyle } as React.CSSProperties}>
+      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
         <p className="text-lg">{data.emoji || "🎉"}</p>
         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Time&apos;s up!</p>
@@ -64,7 +65,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
   const seconds = Math.floor((timeLeft % 60000) / 1000)
 
   return (
-    <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", opacity: 0.9, ...delayStyle } as React.CSSProperties}>
+    <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
       {data.emoji && <p className="text-lg mb-1">{data.emoji}</p>}
       <p className="text-sm font-semibold mb-3" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
       <div className="flex justify-center gap-3">

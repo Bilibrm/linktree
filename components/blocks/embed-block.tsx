@@ -1,5 +1,5 @@
 import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
 
 export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const url = data.url || ""
@@ -43,8 +43,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
-      className={`flex items-center justify-between w-full ${radius} px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
+      style={{ ...getSurfaceStyle(theme), color: "var(--page-accent)", ...delayStyle }}
+      className={`flex items-center justify-between w-full ${radius} border theme-surface px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
     >
       <span>Open embedded content</span>
       <span className="opacity-60">↗</span>

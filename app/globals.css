@@ -196,6 +196,16 @@
   }
 }
 
+/* Shared "glass" surface used by non-featured links, forms, countdown, and embed
+   fallback cards. Each element sets its own --surface-hover-bg inline, so this
+   works regardless of ancestor context (real page, dashboard preview, or editor). */
+.theme-surface {
+  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+}
+.theme-surface:hover {
+  background: var(--surface-hover-bg);
+}
+
 /* Animated gradient background keyframes */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }

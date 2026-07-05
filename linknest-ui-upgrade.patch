@@ -1,0 +1,522 @@
+diff --git a/app/[username]/public-page-client.tsx b/app/[username]/public-page-client.tsx
+index 560b4a2..f9392d5 100644
+--- a/app/[username]/public-page-client.tsx
++++ b/app/[username]/public-page-client.tsx
+@@ -1,13 +1,14 @@
+ "use client"
+ 
+ import { useEffect, useRef, useState, useMemo } from "react"
++import Link from "next/link"
+ import type { IBlock, ThemeConfig } from "@/types"
+ import { BlockRenderer } from "@/components/blocks/block-renderer"
+ import { trackPageView } from "@/lib/actions/analytics"
+ import { verifyPagePassword } from "@/lib/actions/page"
+ import { QRCodeCanvas } from "qrcode.react"
+ import { Lock } from "lucide-react"
+-import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
++import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+ import { DynamicFontLoader } from "@/components/dynamic-font-loader"
+ 
+ /** Strip the one tag that would let custom CSS break out of its <style> element. */
+@@ -70,8 +71,10 @@ export function PublicPageClient({
+   const cssVars = useMemo(() => themeToCSSVars(theme), [theme])
+   const avatarRadius = getAvatarRadius(theme)
+   const maxWidth = getLayoutMaxWidth(theme)
++  const desktopMaxWidth = getDesktopContentMaxWidth(theme)
+   const gap = getSpacingGap(theme)
+   const anim = getEntranceAnimClass(theme)
++  const accent = theme.accentColor || "#16302A"
+ 
+   const visibleBlocks = useMemo(() => blocks.filter((b) => {
+     if (!b.isActive) return false
+@@ -117,9 +120,48 @@ export function PublicPageClient({
+     )
+   }
+ 
++  // Ambient glow only makes sense on solid/gradient backgrounds — a custom image
++  // or animated gradient already fills the space, so a tinted blur behind it would
++  // just muddy what the user picked.
++  const showAmbientGlow = theme.backgroundType === "solid" || !theme.backgroundType
++
++  const avatar = (
++    <div
++      className={`w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center text-3xl lg:text-4xl font-display font-bold overflow-hidden ${avatarRadius}`}
++      style={{
++        backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
++        color: "var(--page-button-text)",
++        boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
++      }}
++    >
++      {avatarUrl ? (
++        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
++      ) : (
++        displayName.charAt(0).toUpperCase()
++      )}
++    </div>
++  )
++
++  const qrBlock = (
++    <div className="flex flex-col items-center lg:items-start gap-3">
++      <div className="bg-white rounded-xl p-2 shadow-sm inline-block">
++        <QRCodeCanvas value={pageUrl} size={80} level="L" />
++      </div>
++      <a
++        href={pageUrl}
++        target="_blank"
++        rel="noopener noreferrer"
++        className="text-xs hover:opacity-70 transition-opacity"
++        style={{ color: "var(--page-accent)", opacity: 0.4 }}
++      >
++        {pageUrl}
++      </a>
++    </div>
++  )
++
+   return (
+     <div
+-      className="min-h-screen flex flex-col items-center py-14 px-4"
++      className="relative min-h-screen"
+       style={{ ...bgStyle, ...cssVars, fontFamily: "var(--page-font-family)" }}
+     >
+       <DynamicFontLoader font={theme.font} />
+@@ -128,74 +170,73 @@ export function PublicPageClient({
+         <style dangerouslySetInnerHTML={{ __html: sanitizeCustomCSS(theme.customCSS) }} />
+       )}
+ 
+-      <div className={`w-full ${maxWidth} mx-auto flex flex-col items-center ${anim}`} style={getEntranceDelayStyle(0)}>
+-        <div
+-          className={`w-24 h-24 flex items-center justify-center text-3xl font-display font-bold mb-4 overflow-hidden ${avatarRadius}`}
+-          style={{
+-            backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)",
+-            color: "var(--page-button-text)",
+-            boxShadow: theme.shadow && theme.shadow !== "none" ? "0 8px 24px -8px rgba(0,0,0,0.25)" : undefined,
+-          }}
+-        >
+-          {avatarUrl ? (
+-            <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+-          ) : (
+-            displayName.charAt(0).toUpperCase()
+-          )}
++      {showAmbientGlow && (
++        <div className="hidden lg:block pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
++          <div
++            className="absolute -top-40 -left-40 w-[560px] h-[560px] rounded-full blur-[120px] opacity-[0.14]"
++            style={{ background: accent }}
++          />
++          <div
++            className="absolute -bottom-48 -right-40 w-[620px] h-[620px] rounded-full blur-[130px] opacity-[0.1]"
++            style={{ background: accent }}
++          />
+         </div>
++      )}
+ 
+-        <h1 className="font-display text-xl font-bold text-center" style={{ color: "var(--page-accent)" }}>
+-          {displayName}
+-        </h1>
+-
+-        {title && (
+-          <p className="text-sm text-center mt-1" style={{ color: "var(--page-accent)", opacity: 0.7 }}>
+-            {title}
+-          </p>
+-        )}
+-
+-        {bio && (
+-          <p className="text-sm text-center mt-3 leading-relaxed max-w-xs" style={{ color: "var(--page-accent)", opacity: 0.6 }}>
+-            {bio}
+-          </p>
+-        )}
+-
+-        <div className={`w-full mt-7 flex flex-col ${gap}`}>
+-          {visibleBlocks.map((block, i) => (
+-            <BlockRenderer key={block._id} block={block} theme={theme} index={i} />
+-          ))}
+-        </div>
++      <div className="relative z-10 mx-auto w-full max-w-5xl px-5 sm:px-8 lg:px-10 py-14 lg:py-20">
++        <div className="flex flex-col lg:flex-row lg:items-start gap-10 lg:gap-16">
++
++          {/* Profile panel — becomes a sticky sidebar at lg+, stacked header on mobile */}
++          <div
++            className={`w-full lg:w-[300px] lg:shrink-0 lg:sticky lg:top-16 flex flex-col items-center lg:items-start text-center lg:text-left ${anim}`}
++            style={getEntranceDelayStyle(0)}
++          >
++            {avatar}
++
++            <h1 className="font-display text-xl lg:text-2xl font-bold mt-4" style={{ color: "var(--page-accent)" }}>
++              {displayName}
++            </h1>
++
++            {title && (
++              <p className="text-sm text-center lg:text-left mt-1" style={{ color: "var(--page-accent)", opacity: 0.7 }}>
++                {title}
++              </p>
++            )}
+ 
+-        {visibleBlocks.length === 0 && (
+-          <p className="text-sm mt-8 text-center" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
+-            This page is still being set up.
+-          </p>
+-        )}
++            {bio && (
++              <p className="text-sm text-center lg:text-left mt-3 leading-relaxed max-w-xs" style={{ color: "var(--page-accent)", opacity: 0.6 }}>
++                {bio}
++              </p>
++            )}
+ 
+-        <div className="mt-10 flex flex-col items-center gap-3">
+-          <div className="bg-white rounded-xl p-2 shadow-sm">
+-            <QRCodeCanvas value={pageUrl} size={80} level="L" />
++            <div className="hidden lg:block mt-8">{qrBlock}</div>
+           </div>
+-          <a
+-            href={pageUrl}
+-            target="_blank"
+-            rel="noopener noreferrer"
+-            className="text-xs hover:opacity-70 transition-opacity"
+-            style={{ color: "var(--page-accent)", opacity: 0.4 }}
+-          >
+-            {pageUrl}
+-          </a>
+-        </div>
+ 
+-        <div className="mt-8 text-center">
+-          <a
+-            href="/"
+-            className="text-xs hover:underline"
+-            style={{ color: "var(--page-accent)", opacity: 0.4 }}
+-          >
+-            LinkNest
+-          </a>
++          {/* Content column */}
++          <div className={`w-full ${maxWidth} ${desktopMaxWidth} mx-auto lg:mx-0 flex flex-col ${gap}`}>
++            {visibleBlocks.map((block, i) => (
++              <BlockRenderer key={block._id} block={block} theme={theme} index={i} />
++            ))}
++
++            {visibleBlocks.length === 0 && (
++              <p className="text-sm mt-4 text-center lg:text-left" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
++                This page is still being set up.
++              </p>
++            )}
++
++            <div className="pt-6 text-center lg:text-left">
++              <Link
++                href="/"
++                className="text-xs hover:underline"
++                style={{ color: "var(--page-accent)", opacity: 0.4 }}
++              >
++                LinkNest
++              </Link>
++            </div>
++          </div>
+         </div>
++
++        <div className="lg:hidden mt-10 flex flex-col items-center">{qrBlock}</div>
+       </div>
+     </div>
+   )
+diff --git a/app/globals.css b/app/globals.css
+index 7b7725c..8c99f27 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -196,6 +196,16 @@
+   }
+ }
+ 
++/* Shared "glass" surface used by non-featured links, forms, countdown, and embed
++   fallback cards. Each element sets its own --surface-hover-bg inline, so this
++   works regardless of ancestor context (real page, dashboard preview, or editor). */
++.theme-surface {
++  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
++}
++.theme-surface:hover {
++  background: var(--surface-hover-bg);
++}
++
+ /* Animated gradient background keyframes */
+ @keyframes gradient-shift {
+   0% { background-position: 0% 50%; }
+diff --git a/components/blocks/countdown-block.tsx b/components/blocks/countdown-block.tsx
+index c0acae2..017a59a 100644
+--- a/components/blocks/countdown-block.tsx
++++ b/components/blocks/countdown-block.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { useState, useEffect } from "react"
+ import type { BlockComponentProps } from "./block-renderer"
+-import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
++import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+ 
+ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const targetDate = data.targetDate ? new Date(data.targetDate).getTime() : 0
+@@ -13,6 +13,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+   const shadow = getShadowClass(theme)
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
++  const surfaceStyle = getSurfaceStyle(theme)
+ 
+   useEffect(() => {
+     setMounted(true)
+@@ -39,7 +40,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+ 
+   if (!mounted) {
+     return (
+-      <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", opacity: 0.5, ...delayStyle } as React.CSSProperties}>
++      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, opacity: 0.6, ...delayStyle } as React.CSSProperties}>
+         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+         <div className="flex justify-center gap-3 mt-3">
+           {["Days", "Hours", "Min", "Sec"].map((label) => unitBox("00", label))}
+@@ -50,7 +51,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+ 
+   if (!targetDate || timeLeft <= 0) {
+     return (
+-      <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", ...delayStyle } as React.CSSProperties}>
++      <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
+         <p className="text-lg">{data.emoji || "🎉"}</p>
+         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Time&apos;s up!</p>
+@@ -64,7 +65,7 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps)
+   const seconds = Math.floor((timeLeft % 60000) / 1000)
+ 
+   return (
+-    <div className={`border p-4 text-center ${cardRadius} ${anim}`} style={{ borderColor: "var(--page-accent)", opacity: 0.9, ...delayStyle } as React.CSSProperties}>
++    <div className={`border theme-surface p-4 text-center ${cardRadius} ${anim}`} style={{ ...surfaceStyle, ...delayStyle } as React.CSSProperties}>
+       {data.emoji && <p className="text-lg mb-1">{data.emoji}</p>}
+       <p className="text-sm font-semibold mb-3" style={{ color: "var(--page-accent)" }}>{data.title || "Countdown"}</p>
+       <div className="flex justify-center gap-3">
+diff --git a/components/blocks/embed-block.tsx b/components/blocks/embed-block.tsx
+index 374c44c..374ae3b 100644
+--- a/components/blocks/embed-block.tsx
++++ b/components/blocks/embed-block.tsx
+@@ -1,5 +1,5 @@
+ import type { BlockComponentProps } from "./block-renderer"
+-import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
++import { getCardRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+ 
+ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
+   const url = data.url || ""
+@@ -43,8 +43,8 @@ export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
+       href={url}
+       target="_blank"
+       rel="noopener noreferrer"
+-      style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
+-      className={`flex items-center justify-between w-full ${radius} px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
++      style={{ ...getSurfaceStyle(theme), color: "var(--page-accent)", ...delayStyle }}
++      className={`flex items-center justify-between w-full ${radius} border theme-surface px-4 py-3 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
+     >
+       <span>Open embedded content</span>
+       <span className="opacity-60">↗</span>
+diff --git a/components/blocks/form-block.tsx b/components/blocks/form-block.tsx
+index 6f265af..f3a4e27 100644
+--- a/components/blocks/form-block.tsx
++++ b/components/blocks/form-block.tsx
+@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
+ import { Label } from "@/components/ui/label"
+ import { toast } from "sonner"
+ import type { BlockComponentProps } from "./block-renderer"
+-import { getCardRadius, getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
++import { getCardRadius, getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
+ 
+ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
+   const [loading, setLoading] = useState(false)
+@@ -47,7 +47,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+ 
+   if (submitted) {
+     return (
+-      <div className={`${cardRadius} ${shadow} border p-6 text-center`} style={{ borderColor: "var(--page-accent)", opacity: 0.9 } as React.CSSProperties}>
++      <div className={`${cardRadius} ${shadow} border theme-surface p-6 text-center`} style={{ ...getSurfaceStyle(theme), opacity: 0.95 } as React.CSSProperties}>
+         <p className="text-sm font-semibold" style={{ color: "var(--page-accent)" }}>Thank you!</p>
+         <p className="text-xs mt-1" style={{ color: "var(--page-accent)", opacity: 0.6 }}>Your submission has been received.</p>
+       </div>
+@@ -57,7 +57,7 @@ export function FormBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   const fields = data.fields || []
+ 
+   return (
+-    <div className={`${cardRadius} ${shadow} border p-4 ${anim}`} style={{ borderColor: "var(--page-accent)", ...delayStyle } as React.CSSProperties}>
++    <div className={`${cardRadius} ${shadow} border theme-surface p-5 ${anim}`} style={{ ...getSurfaceStyle(theme), ...delayStyle } as React.CSSProperties}>
+       {data.title && <h3 className="text-sm font-semibold mb-3 text-center" style={{ color: "var(--page-accent)" }}>{data.title}</h3>}
+       <form onSubmit={handleSubmit} className="space-y-3">
+         {fields.map((field: any, i: number) => (
+diff --git a/components/blocks/link-block.tsx b/components/blocks/link-block.tsx
+index 4607760..c3cb089 100644
+--- a/components/blocks/link-block.tsx
++++ b/components/blocks/link-block.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { trackClick } from "@/lib/actions/analytics"
+ import type { BlockComponentProps } from "./block-renderer"
+-import { getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
++import { getButtonRadius, getShadowClass, getHoverClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle, getFaviconUrl } from "@/lib/theme-utils"
+ import { PlatformIcon } from "./platform-icons"
+ 
+ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComponentProps) {
+@@ -16,11 +16,21 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   }
+ 
+   const linkStyle = theme.linkStyle || "standard"
++  const featured = !!data.featured
+   const radius = getButtonRadius(theme)
+   const shadow = getShadowClass(theme)
+   const hover = getHoverClass(theme)
+   const anim = getEntranceAnimClass(theme)
+   const delayStyle = getEntranceDelayStyle(index)
++  const faviconUrl = !data.icon && !data.thumbnailUrl ? getFaviconUrl(data.url || "") : null
++
++  const icon = data.icon ? (
++    <PlatformIcon platform={data.icon} className={featured ? "w-5 h-5 shrink-0" : "w-4 h-4 shrink-0 opacity-80"} />
++  ) : data.thumbnailUrl ? (
++    <img src={data.thumbnailUrl} alt="" loading="lazy" className={`w-7 h-7 object-cover flex-shrink-0 ${radius === "rounded-full" ? "rounded-full" : "rounded-md"}`} />
++  ) : faviconUrl ? (
++    <img src={faviconUrl} alt="" loading="lazy" className="w-4 h-4 rounded-sm flex-shrink-0 opacity-90" />
++  ) : null
+ 
+   if (linkStyle === "minimal") {
+     return (
+@@ -30,9 +40,9 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+         rel="noopener noreferrer"
+         onClick={handleClick}
+         style={{ color: "var(--page-button-bg)", ...delayStyle }}
+-        className={`group flex items-center justify-center gap-1.5 w-full py-2.5 text-sm font-medium ${hover} ${anim}`}
++        className={`group flex items-center justify-center gap-1.5 w-full py-2.5 ${featured ? "text-base font-bold" : "text-sm font-medium"} ${hover} ${anim}`}
+       >
+-        {data.icon && <PlatformIcon platform={data.icon} className="w-4 h-4 shrink-0 opacity-70" />}
++        {icon}
+         <span className={theme.linkHover === "underline" ? "group-hover:underline underline-offset-4" : ""}>
+           {data.title || "Untitled link"}
+         </span>
+@@ -42,6 +52,7 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+   }
+ 
+   const isCard = linkStyle === "card"
++  const surfaceStyle = !featured ? getSurfaceStyle(theme) : undefined
+ 
+   return (
+     <a
+@@ -49,14 +60,18 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
+       target="_blank"
+       rel="noopener noreferrer"
+       onClick={handleClick}
+-      style={{ backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)", ...delayStyle }}
+-      className={`group flex items-center justify-between w-full ${radius} ${isCard ? shadow || "shadow-sm" : shadow} px-4 py-3.5 text-sm font-semibold ${hover} ${anim}`}
++      style={{
++        ...(featured
++          ? { backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)" }
++          : { ...surfaceStyle, color: "var(--page-accent)" }),
++        ...delayStyle,
++      }}
++      className={`group flex items-center justify-between w-full ${radius} ${
++        featured ? `${shadow || "shadow-md"} px-5 py-4 text-base font-bold` : `border theme-surface ${isCard ? shadow || "shadow-sm" : ""} px-4 py-3.5 text-sm font-semibold`
++      } ${hover} ${anim}`}
+     >
+       <span className="flex items-center gap-3 min-w-0">
+-        {data.icon && <PlatformIcon platform={data.icon} className="w-5 h-5 shrink-0" />}
+-        {data.thumbnailUrl && (
+-          <img src={data.thumbnailUrl} alt="" className={`w-7 h-7 object-cover flex-shrink-0 ${radius === "rounded-full" ? "rounded-full" : "rounded-md"}`} />
+-        )}
++        {icon}
+         <span className="truncate">{data.title || "Untitled link"}</span>
+       </span>
+       <span className={`flex-shrink-0 opacity-60 text-xs transition-transform ${theme.linkHover === "lift" ? "group-hover:translate-x-0.5 group-hover:-translate-y-0.5" : "group-hover:translate-x-0.5"}`}>↗</span>
+diff --git a/components/dashboard/block-editors.tsx b/components/dashboard/block-editors.tsx
+index 022258b..cc9397c 100644
+--- a/components/dashboard/block-editors.tsx
++++ b/components/dashboard/block-editors.tsx
+@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
+ import { Label } from "@/components/ui/label"
+ import { Textarea } from "@/components/ui/textarea"
+ import { Button } from "@/components/ui/button"
++import { Switch } from "@/components/ui/switch"
+ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+ import { Check, ChevronsUpDown, X, XCircle } from "lucide-react"
+ import { PLATFORMS, PlatformIcon } from "@/components/blocks/platform-icons"
+@@ -105,6 +106,13 @@ export function LinkEditor({ data, onChange }: EditorProps) {
+           ))}
+         </div>
+       </div>
++      <div className="flex items-center justify-between pt-1 pb-0.5">
++        <div>
++          <Label className="text-small text-dashboard-text">Featured</Label>
++          <p className="text-small text-muted-foreground/60">Stand out from your other links.</p>
++        </div>
++        <Switch checked={!!data.featured} onCheckedChange={(checked) => onChange({ ...data, featured: checked })} />
++      </div>
+     </div>
+   )
+ }
+diff --git a/lib/theme-utils.ts b/lib/theme-utils.ts
+index fb0a7a4..157e570 100644
+--- a/lib/theme-utils.ts
++++ b/lib/theme-utils.ts
+@@ -43,6 +43,12 @@ const LAYOUT_WIDTH: Record<string, string> = {
+   wide: "max-w-md",
+ }
+ 
++const DESKTOP_CONTENT_WIDTH: Record<string, string> = {
++  narrow: "lg:max-w-sm",
++  normal: "lg:max-w-md",
++  wide: "lg:max-w-xl",
++}
++
+ const ANIM_CLASS: Record<string, string> = {
+   none: "",
+   fade: "theme-anim-fade",
+@@ -87,6 +93,11 @@ export function getLayoutMaxWidth(theme: ThemeConfig): string {
+   return LAYOUT_WIDTH[theme.layoutWidth || "normal"] || LAYOUT_WIDTH.normal
+ }
+ 
++/** The content column's max-width at the lg+ breakpoint, used alongside getLayoutMaxWidth's mobile value. */
++export function getDesktopContentMaxWidth(theme: ThemeConfig): string {
++  return DESKTOP_CONTENT_WIDTH[theme.layoutWidth || "normal"] || DESKTOP_CONTENT_WIDTH.normal
++}
++
+ export function getEntranceAnimClass(theme: ThemeConfig): string {
+   return ANIM_CLASS[theme.animation || "none"] ?? ""
+ }
+@@ -116,7 +127,35 @@ export function getAccentColor(theme: ThemeConfig): string {
+   return theme.accentColor || "#16302A"
+ }
+ 
+-/** Maps a ThemeConfig into CSS custom-property declarations for the public page root. */
++/**
++ * A theme-tinted "glass" surface for card-like blocks (non-featured links, forms,
++ * countdown, embed fallback). Tinted from the theme's own accent color via color-mix,
++ * so it always reads as on-brand regardless of the page's background color/image —
++ * no light/dark detection needed. Sets its own hover-target CSS var so the ".theme-surface"
++ * hover state works without depending on any ancestor providing theme CSS vars.
++ */
++export function getSurfaceStyle(theme: ThemeConfig): React.CSSProperties {
++  const accent = theme.accentColor || "#16302A"
++  return {
++    background: `color-mix(in srgb, ${accent} 7%, transparent)`,
++    borderColor: `color-mix(in srgb, ${accent} 16%, transparent)`,
++    backdropFilter: "blur(8px)",
++    WebkitBackdropFilter: "blur(8px)",
++    ["--surface-hover-bg" as string]: `color-mix(in srgb, ${accent} 13%, transparent)`,
++  } as React.CSSProperties
++}
++
++/** Google's public favicon service — no API key, used as a fallback icon for link blocks that have no explicit platform icon or thumbnail. */
++export function getFaviconUrl(url: string): string | null {
++  try {
++    const { hostname } = new URL(url)
++    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`
++  } catch {
++    return null
++  }
++}
++
++
+ export function themeToCSSVars(theme: ThemeConfig): React.CSSProperties {
+   const vars: Record<string, string> = {}
+ 
+diff --git a/lib/validation.ts b/lib/validation.ts
+index a405f5e..de5829e 100644
+--- a/lib/validation.ts
++++ b/lib/validation.ts
+@@ -26,6 +26,7 @@ export const blockDataSchemas = {
+     url: z.string().url("Invalid URL").max(2000),
+     icon: z.string().max(100).optional(),
+     thumbnailUrl: z.string().max(2000).optional(),
++    featured: z.boolean().optional(),
+   }),
+   header: z.object({
+     text: z.string().min(1).max(200),
