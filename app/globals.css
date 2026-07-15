@@ -276,3 +276,17 @@
 .themed-input:focus {
   border-color: var(--input-focus-border);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .react-parallax-bgimage,
+  .react-parallax-content {
+    transform: none !important;
+  }
+}
+
+/* Landing: visible focus for keyboard users on dark green */
+.bg-ink a:focus-visible,
+.bg-ink button:focus-visible {
+  outline: 2px solid #D2A24C;
+  outline-offset: 3px;
+}
