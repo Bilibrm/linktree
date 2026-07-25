@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "*.cloudinary.com" },
+      { protocol: "https", hostname: "images.pexels.com" },
     ],
   },
   typescript: {
@@ -25,7 +26,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: res.cloudinary.com *.cloudinary.com",
+              "img-src 'self' data: blob: res.cloudinary.com *.cloudinary.com https://images.pexels.com",
               "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com",
               "connect-src 'self'",
               "frame-src 'none'",
