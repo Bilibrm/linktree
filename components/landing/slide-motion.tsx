@@ -1,8 +1,9 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useState } from "react"
 import { animated, useSpring } from "@react-spring/web"
 import { cn } from "@/lib/utils"
+import { useMotionProfile } from "./hooks/use-motion-profile"
 
 const SlideActiveContext = createContext(true)
 
@@ -48,23 +49,22 @@ export function SlideItem({
   staggerMs = 65,
 }: SlideItemProps) {
   const active = useSlideActive()
-  const [reduceMotion, setReduceMotion] = useState(false)
-
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  }, [])
+  const profile = useMotionProfile()
+  const reduceMotion = profile.reduceMotion
+  const lite = profile.lowPower
 
   const off = OFFSETS[from]
   const show = reduceMotion || active
+  const dist = lite ? 0.55 : 1
 
   const spring = useSpring({
     opacity: show ? 1 : 0,
-    x: show ? 0 : off.x,
-    y: show ? 0 : off.y,
-    scale: show ? 1 : off.scale,
-    delay: reduceMotion ? 0 : show ? index * staggerMs : 0,
+    x: show ? 0 : off.x * dist,
+    y: show ? 0 : off.y * dist,
+    scale: show ? 1 : lite ? 0.99 : off.scale,
+    delay: reduceMotion || lite ? 0 : show ? index * staggerMs : 0,
     config: show
-      ? { tension: 260, friction: 24 }
+      ? { tension: lite ? 280 : 260, friction: 24 }
       : { tension: 320, friction: 32 },
   })
 
@@ -84,15 +84,12 @@ type HoverLiftProps = {
 /** Subtle hover lift for tiles / cards inside slides. */
 export function HoverLift({ children, className, lift = 5 }: HoverLiftProps) {
   const [hovered, setHovered] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
-
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  }, [])
+  const profile = useMotionProfile()
+  const disabled = profile.reduceMotion || profile.lowPower || profile.coarsePointer
 
   const spring = useSpring({
-    y: !reduceMotion && hovered ? -lift : 0,
-    scale: !reduceMotion && hovered ? 1.025 : 1,
+    y: !disabled && hovered ? -lift : 0,
+    scale: !disabled && hovered ? 1.025 : 1,
     config: { tension: 420, friction: 22 },
   })
 
@@ -100,7 +97,7 @@ export function HoverLift({ children, className, lift = 5 }: HoverLiftProps) {
     <animated.div
       style={spring}
       className={cn("will-change-transform", className)}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => !disabled && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {children}

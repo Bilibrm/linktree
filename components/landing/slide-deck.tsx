@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from "react"
 import { animated, useSpring } from "@react-spring/web"
 import { cn } from "@/lib/utils"
 import { SlideActiveProvider } from "./slide-motion"
+import { SlideBackdrop, type BackdropVariant } from "./slide-backdrop"
+import { useMotionProfile } from "./hooks/use-motion-profile"
 
 type SlideProps = {
   children: React.ReactNode
   id?: string
   className?: string
-  bgImage?: string
-  bgPosition?: string
-  tint?: string
+  backdrop?: React.ReactNode | null
+  backdropVariant?: BackdropVariant
 }
 
 /** One full-viewport slide in the snap deck. */
@@ -19,66 +20,97 @@ export function Slide({
   children,
   id,
   className,
-  bgImage,
-  bgPosition = "center",
-  tint = "bg-ink/80",
+  backdrop,
+  backdropVariant = "default",
 }: SlideProps) {
   const ref = useRef<HTMLElement>(null)
+  const nearRef = useRef(false)
   const [active, setActive] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
+  const [near, setNear] = useState(false)
+  const profile = useMotionProfile()
 
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  }, [])
+  const [{ opacity, contentY }, api] = useSpring(() => ({
+    opacity: 1,
+    contentY: 0,
+    config: { tension: profile.lowPower ? 170 : 120, friction: 28 },
+  }))
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setActive(entry.isIntersecting && entry.intersectionRatio > 0.45),
-      { threshold: [0.45, 0.6, 0.75] }
+      ([entry]) => {
+        const isNear = entry.isIntersecting
+        nearRef.current = isNear
+        setNear(isNear)
+        setActive(entry.intersectionRatio > 0.45)
+        if (!isNear && !profile.reduceMotion) {
+          api.start({ opacity: 0.35, contentY: 0 })
+        }
+      },
+      { threshold: [0.01, 0.45, 0.6, 0.75], rootMargin: "15% 0px" }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [api, profile.reduceMotion])
 
-  const shell = useSpring({
-    opacity: reduceMotion ? 1 : active ? 1 : 0.4,
-    config: { tension: 180, friction: 26 },
-  })
+  useEffect(() => {
+    if (profile.reduceMotion) {
+      api.start({ opacity: 1, contentY: 0, immediate: true })
+      return
+    }
+    if (!near) return
 
-  const bgSpring = useSpring({
-    scale: reduceMotion ? 1 : active ? 1 : 1.06,
-    config: { tension: 120, friction: 40 },
-  })
+    const el = ref.current
+    if (!el) return
+    const deck = el.closest("[data-slide-deck]") as HTMLElement | null
+    if (!deck) return
+
+    let raf = 0
+    const drift = (profile.lowPower ? 28 : 52) * profile.intensity
+
+    function update() {
+      if (!nearRef.current) return
+      const rect = el!.getBoundingClientRect()
+      const viewH = window.innerHeight || 1
+      const offset = (viewH * 0.5 - (rect.top + rect.height * 0.5)) / viewH
+      const clamped = Math.max(-1.15, Math.min(1.15, offset))
+      api.start({
+        opacity: active ? 1 : 0.55,
+        contentY: clamped * -drift,
+      })
+    }
+
+    function onScroll() {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(update)
+    }
+
+    deck.addEventListener("scroll", onScroll, { passive: true })
+    update()
+    return () => {
+      cancelAnimationFrame(raf)
+      deck.removeEventListener("scroll", onScroll)
+    }
+  }, [active, api, near, profile.intensity, profile.lowPower, profile.reduceMotion])
+
+  const resolvedBackdrop =
+    backdrop === null ? null : backdrop === undefined ? <SlideBackdrop variant={backdropVariant} /> : backdrop
 
   return (
     <section
       ref={ref}
       id={id}
       className={cn(
-        "relative flex h-dvh w-full shrink-0 snap-start snap-always flex-col justify-center overflow-hidden",
-        !bgImage && "bg-ink",
+        "relative flex h-dvh w-full shrink-0 snap-start snap-always flex-col justify-center overflow-hidden bg-ink [content-visibility:auto] [contain-intrinsic-size:100vw_100dvh]",
         className
       )}
     >
-      {bgImage && (
-        <>
-          <animated.div
-            className="absolute inset-0 bg-cover"
-            style={{
-              backgroundImage: `url(${bgImage})`,
-              backgroundPosition: bgPosition,
-              scale: bgSpring.scale,
-            }}
-          />
-          <div className={cn("absolute inset-0", tint)} />
-        </>
-      )}
+      {resolvedBackdrop}
       <SlideActiveProvider active={active}>
         <animated.div
-          style={shell}
-          className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-5 py-16 md:px-8 md:py-14"
+          style={{ opacity, y: contentY }}
+          className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-center px-5 py-16 will-change-transform md:px-8 md:py-14"
         >
           {children}
         </animated.div>
@@ -96,12 +128,15 @@ type SlideDeckProps = {
 /** Vertical snap deck — scrolling feels like changing slides. */
 export function SlideDeck({ children, onProgress, className }: SlideDeckProps) {
   const deckRef = useRef<HTMLDivElement>(null)
+  const profile = useMotionProfile()
+  const ticking = useRef(false)
 
   useEffect(() => {
     const el = deckRef.current
     if (!el) return
 
     function update() {
+      ticking.current = false
       const deck = deckRef.current
       if (!deck) return
       const max = deck.scrollHeight - deck.clientHeight
@@ -110,16 +145,26 @@ export function SlideDeck({ children, onProgress, className }: SlideDeckProps) {
       onProgress?.(progress, index)
     }
 
-    el.addEventListener("scroll", update, { passive: true })
+    function onScroll() {
+      if (ticking.current) return
+      ticking.current = true
+      requestAnimationFrame(update)
+    }
+
+    el.addEventListener("scroll", onScroll, { passive: true })
     update()
-    return () => el.removeEventListener("scroll", update)
+    return () => el.removeEventListener("scroll", onScroll)
   }, [onProgress])
 
   return (
     <div
       ref={deckRef}
+      data-slide-deck
+      data-low-power={profile.lowPower ? "true" : "false"}
       className={cn(
-        "h-dvh touch-pan-y snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-y-contain scroll-smooth",
+        "h-dvh touch-pan-y snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-y-contain",
+        // scroll-smooth feels nice on desktop but causes jank on low-end / coarse pointers
+        !profile.lowPower && !profile.coarsePointer && "scroll-smooth",
         className
       )}
       style={{ scrollSnapType: "y mandatory" }}
@@ -135,13 +180,14 @@ type SlideDotsProps = {
 }
 
 function SlideDot({ active }: { active: boolean }) {
-  const spring = useSpring({
-    height: active ? 20 : 6,
-    opacity: active ? 1 : 0.35,
-    config: { tension: 300, friction: 22 },
-  })
-
-  return <animated.div style={spring} className="w-1.5 rounded-full bg-gold" />
+  return (
+    <div
+      className={cn(
+        "w-1.5 rounded-full bg-gold transition-[height,opacity] duration-300",
+        active ? "h-5 opacity-100" : "h-1.5 opacity-35"
+      )}
+    />
+  )
 }
 
 export function SlideDots({ count, active }: SlideDotsProps) {

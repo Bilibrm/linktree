@@ -1,35 +1,35 @@
 "use client"
 
-import Image from "next/image"
-import { landingImages } from "./landing-images"
 import { Slide } from "./slide-deck"
 import { SpringCounter } from "./spring-counter"
 import { HoverLift, SlideItem } from "./slide-motion"
 
-const steps = [
+type StepKind = "username" | "theme" | "blocks" | "analytics"
+
+const steps: { label: string; title: string; desc: string; kind: StepKind }[] = [
   {
     label: "01",
     title: "Pick a username",
     desc: "No email verification. No card. A name and you are live.",
-    image: landingImages.steps[0],
+    kind: "username",
   },
   {
     label: "02",
     title: "Choose your look",
     desc: "Eight themes. Colors, fonts, backgrounds — all yours.",
-    image: landingImages.steps[1],
+    kind: "theme",
   },
   {
     label: "03",
     title: "Drop in blocks",
     desc: "Links, embeds, forms, countdowns. Ten types. Drag to reorder.",
-    image: landingImages.steps[2],
+    kind: "blocks",
   },
   {
     label: "04",
     title: "Watch what happens",
     desc: "Clicks, views, referrers. Real numbers — no guesswork.",
-    image: landingImages.steps[3],
+    kind: "analytics",
   },
 ]
 
@@ -39,16 +39,91 @@ const stats = [
   { value: 100, suffix: "%", label: "open source" },
 ]
 
+/** Mini product UI per step — clearer than a stock photo. */
+function StepVisual({ kind }: { kind: StepKind }) {
+  if (kind === "username") {
+    return (
+      <div className="w-full space-y-2">
+        <div className="flex items-center rounded-lg border border-white/10 bg-ink px-2.5 py-2 text-[10px]">
+          <span className="text-bone/40">linknest.app/</span>
+          <span className="font-semibold text-bone">alex</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[9px] text-[#6B9E8C]">
+          <span className="flex h-3 w-3 items-center justify-center rounded-full bg-[#6B9E8C]/20">✓</span>
+          Available
+        </div>
+      </div>
+    )
+  }
+
+  if (kind === "theme") {
+    return (
+      <div className="grid w-full grid-cols-2 gap-1.5">
+        {[
+          ["#0F211D", "#D2A24C"],
+          ["#E7DFC9", "#D2A24C"],
+          ["#1A0F0C", "#DD5B39"],
+          ["#162822", "#6B9E8C"],
+        ].map(([bg, accent], i) => (
+          <div
+            key={i}
+            className="flex items-center gap-1.5 rounded-md border border-white/10 p-1.5"
+            style={{ backgroundColor: bg }}
+          >
+            <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: accent }} />
+            <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: accent, opacity: 0.35 }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (kind === "blocks") {
+    return (
+      <div className="w-full space-y-1.5">
+        {[
+          { w: "100%", accent: true },
+          { w: "88%", accent: false },
+          { w: "94%", accent: false },
+        ].map((row, i) => (
+          <div
+            key={i}
+            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+              row.accent ? "border-gold/30 bg-gold/15" : "border-white/10 bg-ink"
+            }`}
+            style={{ width: row.w }}
+          >
+            <span className="flex flex-col gap-[2px]">
+              <span className="block h-[2px] w-2.5 rounded-full bg-bone/30" />
+              <span className="block h-[2px] w-2.5 rounded-full bg-bone/30" />
+            </span>
+            <span
+              className={`h-1.5 flex-1 rounded-full ${row.accent ? "bg-gold/50" : "bg-bone/15"}`}
+            />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full w-full items-end gap-1.5">
+      {[35, 55, 42, 78, 62, 95].map((height, i) => (
+        <div
+          key={i}
+          className={`flex-1 rounded-t-sm ${i === 5 ? "bg-gold" : "bg-gold/25"}`}
+          style={{ height: `${height}%` }}
+        />
+      ))}
+    </div>
+  )
+}
+
 /** Dense craft chapter: proof + four steps across two packed slides. */
 export function CraftSteps() {
   return (
     <>
-      <Slide
-        id="craft"
-        bgImage={landingImages.craftBand}
-        bgPosition={landingImages.craftBandPosition}
-        tint="bg-gradient-to-br from-ink/92 via-ink/78 to-ink/88"
-      >
+      <Slide id="craft" backdropVariant="craft">
         <div className="flex h-full flex-col justify-center gap-8">
           <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-end md:gap-10">
             <div>
@@ -111,16 +186,8 @@ export function CraftSteps() {
                     </h3>
                     <p className="mt-2 text-caption leading-relaxed text-bone/70 md:text-body">{step.desc}</p>
                   </div>
-                  <div className="relative min-h-[120px]">
-                    <Image
-                      src={step.image.src}
-                      alt=""
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      style={{ objectPosition: step.image.position }}
-                      sizes="(max-width:768px) 40vw, 22vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent to-surface/45" />
+                  <div className="flex items-center justify-center border-l border-white/10 bg-ink/45 p-3.5 md:p-4">
+                    <StepVisual kind={step.kind} />
                   </div>
                 </div>
               </HoverLift>

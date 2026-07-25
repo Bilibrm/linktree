@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { getMagicKeyframes, magicFramesToCss, type MagicAnimationName } from "./magic-keyframes"
+import { useMotionProfile } from "./hooks/use-motion-profile"
 
 type MagicRevealProps = {
   children: React.ReactNode
@@ -25,11 +26,8 @@ export function MagicReveal({
   const uid = useId().replace(/:/g, "")
   const animName = `magic-${animation}-${uid}`
   const [visible, setVisible] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
-
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  }, [])
+  const profile = useMotionProfile()
+  const lite = profile.reduceMotion || profile.lowPower
 
   useEffect(() => {
     const el = ref.current
@@ -49,7 +47,7 @@ export function MagicReveal({
   }, [])
 
   useEffect(() => {
-    if (reduceMotion) return
+    if (lite) return
     const css = magicFramesToCss(animName, getMagicKeyframes(animation))
     const style = document.createElement("style")
     style.textContent = css
@@ -57,10 +55,15 @@ export function MagicReveal({
     return () => {
       style.remove()
     }
-  }, [animName, animation, reduceMotion])
+  }, [animName, animation, lite])
 
-  const style: React.CSSProperties = reduceMotion
-    ? { opacity: visible ? 1 : 0, transition: "opacity 0.35s ease" }
+  const style: React.CSSProperties = lite
+    ? {
+        opacity: visible ? 1 : 0,
+        transform: visible ? "none" : "translateY(10px)",
+        transition: `opacity ${duration * 0.7}s ease, transform ${duration * 0.7}s ease`,
+        transitionDelay: `${delay}s`,
+      }
     : visible
       ? {
           animationName: animName,

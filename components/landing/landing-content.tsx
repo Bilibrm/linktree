@@ -10,8 +10,8 @@ import { BlockBento } from "./block-bento"
 import { ThemeStage } from "./theme-stage"
 import { PowerSection } from "./power-section"
 import { Slide, SlideDeck, SlideDots } from "./slide-deck"
-import { landingImages } from "./landing-images"
 import { useMagnetic } from "./hooks/use-magnetic"
+import { MotionProfileProvider } from "./hooks/use-motion-profile"
 import { SlideItem } from "./slide-motion"
 
 /** Hero + craft×2 + bento + theme + power + faq + cta */
@@ -79,6 +79,7 @@ export function LandingContent() {
   })
 
   return (
+    <MotionProfileProvider>
     <div className="relative h-dvh overflow-hidden bg-ink font-body text-bone">
       <animated.nav style={navSpring} className="pointer-events-none fixed left-0 right-0 top-0 z-40 flex justify-center px-4 pt-3">
         <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/10 bg-surface/80 px-4 py-2 backdrop-blur-xl sm:px-5">
@@ -152,15 +153,11 @@ export function LandingContent() {
           </div>
         </Slide>
 
-        <Slide
-          bgImage={landingImages.cta}
-          bgPosition={landingImages.ctaPosition}
-          tint="bg-gradient-to-r from-ink/50 via-ink/62 to-ink/90"
-        >
+        <Slide backdropVariant="cta">
           <div className="grid gap-6 md:grid-cols-[1fr_1.05fr] md:items-center md:gap-10">
             <div className="hidden md:block">
               <SlideItem index={0} from="left">
-                <p className="font-mono text-small uppercase tracking-[0.2em] text-gold">Last stop</p>
+                <p className="font-mono text-small uppercase tracking-[0.2em] text-gold">Last step</p>
               </SlideItem>
               <SlideItem index={1} from="up">
                 <p className="mt-4 max-w-sm font-display text-[clamp(1.75rem,3vw,2.4rem)] font-bold leading-tight text-bone/90">
@@ -171,7 +168,7 @@ export function LandingContent() {
             <SlideItem index={1} from="scale">
               <div className="w-full rounded-[1.75rem] border border-white/12 bg-ink/75 px-6 py-8 backdrop-blur-md md:px-9 md:py-10">
                 <h2 className="font-display text-[clamp(2.1rem,4vw,3.25rem)] font-black leading-[0.95] text-bone">
-                  Your trail is waiting.
+                  Your page is waiting.
                 </h2>
                 <p className="mb-7 mt-4 max-w-sm text-body leading-relaxed text-bone/80">
                   Free to start. Open source. No data collection. Just your corner of the web.
@@ -206,5 +203,6 @@ export function LandingContent() {
         </Slide>
       </SlideDeck>
     </div>
+    </MotionProfileProvider>
   )
 }
