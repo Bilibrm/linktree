@@ -62,7 +62,6 @@ export async function getAnalytics(pageId: string) {
   if (!page) throw new Error("Unauthorized")
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
   const [totalClicks, totalViews, clicks7d, views7d, topBlocks, dailyData] = await Promise.all([
     ClickEvent.countDocuments({ pageId, blockId: { $ne: "pageview" } }),
@@ -93,12 +92,19 @@ export async function getAnalytics(pageId: string) {
   const blocks = blockIds.length > 0 ? await Block.find({ _id: { $in: blockIds } }).select("type data").lean() : []
 
   const blockMap = new Map(blocks.map((b) => [b._id.toString(), b]))
-  const topLinks = topBlocks.map((b: { _id: string; count: number }) => ({
+  const topLinks = topBlocks.map((b: { _id: string; count: number }) => {
+    const data = blockMap.get(b._id)?.data as Record<string, unknown> | undefined
+    const title =
+      (typeof data?.title === "string" && data.title) ||
+      (typeof data?.text === "string" && data.text) ||
+      "Unknown"
+  return {
     blockId: b._id,
-    title: (blockMap.get(b._id)?.data as any)?.title || (blockMap.get(b._id)?.data as any)?.text || "Unknown",
+    title,
     type: blockMap.get(b._id)?.type || "unknown",
     clicks: b.count,
-  }))
+  }
+  })
 
   return {
     totalClicks,

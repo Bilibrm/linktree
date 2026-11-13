@@ -24,7 +24,7 @@ export function AnalyticsClient({ pageId, username }: { pageId: string; username
     async function fetchData() {
       try {
         const result = await getAnalytics(pageId)
-        setData(result as any)
+        setData(result)
       } catch {
         // handled by empty state
       }

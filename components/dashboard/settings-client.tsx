@@ -42,7 +42,7 @@ export function SettingsClient({
     formData.append("isPublished", String(isPublished))
     formData.append("seo", JSON.stringify({ title: seoTitle, description: seoDesc }))
 
-    const result: any = await updateMyPage(formData)
+    const result = await updateMyPage(formData)
     if (result?.error) toast.error("Failed to save")
     else {
       toast.success("Settings saved!")
@@ -61,7 +61,7 @@ export function SettingsClient({
     setUploading(true)
     const formData = new FormData()
     formData.append("file", file)
-    const result: any = await uploadToCloudinary(formData)
+    const result = await uploadToCloudinary(formData)
     if (result?.url) {
       setAvatarUrl(result.url)
       const profileForm = new FormData()
@@ -80,7 +80,7 @@ export function SettingsClient({
     const formData = new FormData()
     formData.append("name", name)
     if (avatarUrl) formData.append("avatarUrl", avatarUrl)
-    const result: any = await updateMyProfile(formData)
+    const result = await updateMyProfile(formData)
     if (result?.error) toast.error("Failed to update profile")
     else toast.success("Profile updated!")
   }

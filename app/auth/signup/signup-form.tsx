@@ -43,11 +43,11 @@ export function SignupForm() {
     setFieldErrors({})
 
     const formData = new FormData(e.currentTarget)
-    const result: any = await signupAction(formData)
+    const result = await signupAction(formData)
 
     if (result?.error) {
-      if (result.field && typeof result.field === "object") {
-        const entries = Object.entries(result.field)
+      if ("field" in result && result.field === true && typeof result.error === "object" && result.error !== null) {
+        const entries = Object.entries(result.error)
         const mapped: Record<string, string> = {}
         for (const [k, v] of entries) {
           mapped[k] = Array.isArray(v) ? v[0] : String(v)

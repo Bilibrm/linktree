@@ -1,3 +1,5 @@
+import type { FlatBlockData } from "@/lib/validation"
+
 export type BlockType = "link" | "header" | "text" | "divider" | "social" | "image" | "gallery" | "embed" | "form" | "countdown" | "button" | "spacer" | "video"
 
 export type ThemePreset = "minimal" | "dark" | "vibrant" | "nature" | "ocean" | "sunset" | "mono" | "bold"
@@ -92,7 +94,7 @@ export interface IBlock {
   pageId: string
   type: BlockType
   order: number
-  data: BlockData
+  data: FlatBlockData
   startAt?: string | null
   endAt?: string | null
   isActive: boolean

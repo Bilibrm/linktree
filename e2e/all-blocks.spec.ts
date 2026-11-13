@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Locator, type Page } from "@playwright/test"
 import * as fs from "fs"
 import * as path from "path"
 
@@ -10,7 +10,7 @@ function getUserInfo() {
 
 type BlockDef = {
   label: string
-  fill: (page: import("@playwright/test").Page, d: any) => Promise<void>
+  fill: (page: Page, d: Locator) => Promise<void>
 }
 
 const BLOCKS: BlockDef[] = [

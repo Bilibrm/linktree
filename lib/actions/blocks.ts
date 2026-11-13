@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/mongoose"
 import { Block } from "@/lib/models/block"
 import { Page } from "@/lib/models/page"
 import { createBlockSchema, updateBlockSchema, reorderBlocksSchema } from "@/lib/validation"
+import { serializeBlockLean, type LeanBlockDoc } from "@/lib/serialize-block"
 import { revalidatePath } from "next/cache"
 
 async function getOwnedPage(pageId: string, userId: string) {
@@ -23,18 +24,15 @@ export async function getBlocks(pageId: string) {
   await getOwnedPage(pageId, userId)
 
   const blocks = await Block.find({ pageId }).sort({ order: 1 }).lean()
-  return blocks.map((b) => ({
-    _id: String(b._id),
-    pageId: String(b.pageId),
-    type: b.type,
-    order: b.order,
-    data: b.data,
-    startAt: b.startAt ? new Date(b.startAt).toISOString() : null,
-    endAt: b.endAt ? new Date(b.endAt).toISOString() : null,
-    isActive: b.isActive,
-    createdAt: (b as any).createdAt?.toISOString(),
-    updatedAt: (b as any).updatedAt?.toISOString(),
-  }))
+  return blocks.map((b) => {
+    const lean = b as LeanBlockDoc & { createdAt?: Date; updatedAt?: Date }
+    const serialized = serializeBlockLean(lean)
+    return {
+      ...serialized,
+      createdAt: lean.createdAt?.toISOString(),
+      updatedAt: lean.updatedAt?.toISOString(),
+    }
+  })
 }
 
 export async function createBlock(formData: FormData) {
@@ -56,7 +54,7 @@ export async function createBlock(formData: FormData) {
   await getOwnedPage(parsed.data.pageId, userId)
 
   const maxOrder = await Block.findOne({ pageId: parsed.data.pageId }).sort({ order: -1 }).select("order").lean()
-  const order = parsed.data.order ?? (maxOrder ? (maxOrder as any).order + 1 : 0)
+  const order = parsed.data.order ?? (maxOrder ? maxOrder.order + 1 : 0)
 
   const block = await Block.create({
     pageId: parsed.data.pageId,

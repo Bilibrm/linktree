@@ -130,7 +130,6 @@ const bgDirectionOptions = [
 ]
 
 export function AppearanceClient({
-  pageId,
   initialTheme,
   username,
   blocks = [],
@@ -163,7 +162,7 @@ export function AppearanceClient({
     if (visibility === "password" && pagePassword) {
       formData.append("password", pagePassword)
     }
-    const result: any = await updateMyPage(formData)
+    const result = await updateMyPage(formData)
     if (result?.error) {
       toast.error("Failed to save")
     } else {

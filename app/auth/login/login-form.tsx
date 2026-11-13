@@ -21,7 +21,7 @@ export function LoginForm() {
     setLoading(true)
     setError("")
 
-    const result: any = await loginActionRaw({ email, password })
+    const result = await loginActionRaw({ email, password })
     if (result?.error) {
       setError(result.error)
       toast.error(result.error)

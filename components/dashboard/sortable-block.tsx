@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import type { FlatBlockData } from "@/lib/validation"
 import type { IBlock } from "@/types"
 import { Switch } from "@/components/ui/switch"
 import { updateBlock, deleteBlock, toggleBlockActive } from "@/lib/actions/blocks"
@@ -44,9 +45,9 @@ const typeIcons: Record<string, typeof Link2> = {
   video: Video,
 }
 
-export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: { block: IBlock; pageId: string; onBlockUpdate?: (block: IBlock) => void; onBlockDelete?: (blockId: string) => void }) {
+export function SortableBlock({ block, onBlockUpdate, onBlockDelete }: { block: IBlock; pageId: string; onBlockUpdate?: (block: IBlock) => void; onBlockDelete?: (blockId: string) => void }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editData, setEditData] = useState(block.data as Record<string, any>)
+  const [editData, setEditData] = useState<FlatBlockData>(() => ({ ...block.data }))
   const [isSaving, setIsSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -67,7 +68,7 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
     const formData = new FormData()
     formData.append("data", JSON.stringify(editData))
 
-    const result: any = await updateBlock(block._id, formData)
+    const result = await updateBlock(block._id, formData)
     if (result?.error) {
       toast.error("Failed to save")
     } else {
@@ -123,15 +124,15 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
           </div>
           <div className="min-w-0">
             <span className="text-caption font-medium text-dashboard-text block truncate leading-tight">
-              {block.type === "link" && (editData.title || block.data.link?.title || "Untitled link")}
-              {block.type === "header" && (editData.text || block.data.header?.text || "Untitled header")}
-              {block.type === "text" && (editData.content || block.data.text?.content || "Text block")}
+              {block.type === "link" && (editData.title || block.data.title || "Untitled link")}
+              {block.type === "header" && (editData.text || block.data.text || "Untitled header")}
+              {block.type === "text" && (editData.content || block.data.content || "Text block")}
               {block.type === "social" && "Social icons"}
               {block.type === "image" && "Image"}
               {block.type === "gallery" && "Gallery"}
               {block.type === "embed" && "Embed"}
-              {block.type === "form" && (editData.title || block.data.form?.title || "Form")}
-              {block.type === "countdown" && (editData.title || block.data.countdown?.title || "Countdown")}
+              {block.type === "form" && (editData.title || block.data.title || "Form")}
+              {block.type === "countdown" && (editData.title || block.data.title || "Countdown")}
               {block.type === "divider" && "Divider"}
               {block.type === "button" && (editData.label || "Button")}
               {block.type === "spacer" && `${editData.height || 24}px spacer`}
@@ -147,7 +148,7 @@ export function SortableBlock({ block, pageId, onBlockUpdate, onBlockDelete }: {
             <>
               <button
                 type="button"
-                onClick={() => { setEditData(block.data as Record<string, any>); setIsEditing(false) }}
+                onClick={() => { setEditData({ ...block.data }); setIsEditing(false) }}
                 className="min-h-[44px] px-3 py-2 rounded-lg text-muted-foreground hover:text-dashboard-text hover:bg-white/[0.04] text-small flex items-center gap-1.5 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />

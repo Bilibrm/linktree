@@ -1,5 +1,6 @@
 "use client"
 
+import type { FlatBlockData } from "@/lib/validation"
 import type { IBlock, ThemeConfig } from "@/types"
 import { LinkBlock } from "./link-block"
 import { HeaderBlock } from "./header-block"
@@ -16,7 +17,7 @@ import { SpacerBlock } from "./spacer-block"
 import { VideoBlock } from "./video-block"
 
 export type BlockComponentProps = {
-  data: any
+  data: FlatBlockData
   blockId?: string
   pageId?: string
   theme: ThemeConfig

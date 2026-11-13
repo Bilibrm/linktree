@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import type { FlatBlockData } from "@/lib/validation"
 import type { IBlock, BlockType } from "@/types"
 import { BlockList } from "@/components/dashboard/block-list"
 import { PublicPreview } from "@/components/blocks/public-preview"
@@ -28,14 +28,14 @@ const blockTypes: { type: BlockType; label: string; icon: typeof Link2; descript
   { type: "video", label: "Video", icon: Video, description: "Video file with poster" },
 ]
 
-function getDefaultData(type: BlockType) {
+function getDefaultData(type: BlockType): FlatBlockData {
   switch (type) {
     case "link":
       return { title: "New Link", url: "https://", icon: "", thumbnailUrl: "" }
     case "header":
-      return { text: "New Section", level: 2 }
+      return { text: "New Section", level: 2 as const }
     case "text":
-      return { content: "Add your text here...", align: "center" }
+      return { content: "Add your text here...", align: "center" as const }
     case "divider":
       return {}
     case "social":
@@ -45,13 +45,13 @@ function getDefaultData(type: BlockType) {
     case "gallery":
       return { images: [{ src: "", alt: "" }] }
     case "embed":
-      return { url: "https://", type: "youtube" }
+      return { url: "https://", type: "youtube" as const }
     case "form":
       return { title: "Contact", fields: [{ label: "Name", type: "text", required: true }], buttonText: "Submit" }
     case "countdown":
       return { title: "Countdown", targetDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16), emoji: "" }
     case "button":
-      return { label: "Click me", url: "https://", variant: "primary", icon: "", fullWidth: false }
+      return { label: "Click me", url: "https://", variant: "primary" as const, icon: "", fullWidth: false }
     case "spacer":
       return { height: 24 }
     case "video":
@@ -78,13 +78,12 @@ export function DashboardClient({
   bio?: string
   title?: string
 }) {
-  const router = useRouter()
   const [blocks, setBlocks] = useState<IBlock[]>(initialBlocks)
   const [isAdding, setIsAdding] = useState(false)
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [selectedType, setSelectedType] = useState<BlockType | null>(null)
-  const [editData, setEditData] = useState<Record<string, any>>({})
+  const [editData, setEditData] = useState<FlatBlockData>({})
 
   const handleCreateBlock = useCallback(
     async () => {
@@ -95,7 +94,7 @@ export function DashboardClient({
       formData.append("type", selectedType)
       formData.append("data", JSON.stringify(editData))
 
-      const result: any = await createBlock(formData)
+      const result = await createBlock(formData)
       if (result?.error) {
         toast.error("Failed to create block")
       } else if (result?.block) {

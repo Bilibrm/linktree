@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Fraunces, Public_Sans, IBM_Plex_Mono } from "next/font/google"
 
 /**
  * Font pairings that are NOT covered by the root layout's
@@ -26,20 +25,19 @@ const FONT_VARS: Record<string, string> = {
   "serif-sans": "'Playfair Display', 'Inter', serif",
 }
 
+function fontNeedsDynamicLoad(font?: string): boolean {
+  if (!font || font === "fraunces-publicsans") return false
+  return Boolean(FONT_LINKS[font])
+}
+
 export function DynamicFontLoader({ font }: { font?: string }) {
-  const [loaded, setLoaded] = useState(false)
+  const [loaded, setLoaded] = useState(() => !fontNeedsDynamicLoad(font))
 
   useEffect(() => {
-    if (!font || font === "fraunces-publicsans") {
-      setLoaded(true)
-      return
-    }
+    if (!fontNeedsDynamicLoad(font)) return
 
-    const href = FONT_LINKS[font]
-    if (!href) {
-      setLoaded(true)
-      return
-    }
+    const href = FONT_LINKS[font!]
+    if (!href) return
 
     const link = document.createElement("link")
     link.rel = "stylesheet"

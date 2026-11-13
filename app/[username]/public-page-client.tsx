@@ -7,7 +7,7 @@ import { BlockRenderer } from "@/components/blocks/block-renderer"
 import { trackPageView } from "@/lib/actions/analytics"
 import { verifyPagePassword } from "@/lib/actions/page"
 import { QRCodeCanvas } from "qrcode.react"
-import { Lock, Unlock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { getAvatarRadius, getLayoutMaxWidth, getDesktopContentMaxWidth, getSpacingGap, getEntranceAnimClass, getEntranceDelayStyle, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
 import { DynamicFontLoader } from "@/components/dynamic-font-loader"
 
@@ -21,7 +21,6 @@ function sanitizeCustomCSS(css: string): string {
 }
 
 export function PublicPageClient({
-  username,
   displayName,
   avatarUrl,
   bio,
@@ -31,7 +30,6 @@ export function PublicPageClient({
   pageId,
   pageUrl,
   visibility,
-  pageHasPassword,
 }: {
   username: string
   displayName: string

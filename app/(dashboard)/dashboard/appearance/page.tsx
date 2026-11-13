@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/mongoose"
 import { Page } from "@/lib/models/page"
 import { Block } from "@/lib/models/block"
 import { AppearanceClient } from "@/components/dashboard/appearance-client"
+import { pageThemeToConfig, serializeBlockLean } from "@/lib/serialize-block"
 
 export default async function AppearancePage() {
   const session = await auth()
@@ -15,25 +16,16 @@ export default async function AppearancePage() {
 
   const blocks = await Block.find({ pageId: page._id, isActive: true }).sort({ order: 1 }).lean()
 
-  const serializedBlocks = blocks.map((b) => ({
-    _id: b._id.toString(),
-    pageId: b.pageId.toString(),
-    type: b.type as any,
-    order: b.order,
-    data: b.data as any,
-    startAt: b.startAt?.toISOString() ?? null,
-    endAt: b.endAt?.toISOString() ?? null,
-    isActive: b.isActive,
-  }))
+  const serializedBlocks = blocks.map((b) => serializeBlockLean(b))
 
   return (
     <AppearanceClient
       pageId={page._id.toString()}
-      initialTheme={page.theme as any}
+      initialTheme={pageThemeToConfig(page.theme)}
       username={session.user.username || ""}
       blocks={serializedBlocks}
       displayName={page.title || session.user.username || ""}
-      avatarUrl={(page as any).avatarUrl}
+      avatarUrl={undefined}
       bio={page.bio}
       title={page.title}
       initialVisibility={page.visibility || "public"}

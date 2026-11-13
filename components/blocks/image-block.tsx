@@ -1,7 +1,5 @@
 import type { BlockComponentProps } from "./block-renderer"
 import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
-import { ImageOff } from "lucide-react"
-
 export function ImageBlock({ data, theme, index = 0 }: BlockComponentProps) {
   if (!data.src) return null
 

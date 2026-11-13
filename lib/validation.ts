@@ -107,6 +107,21 @@ export const blockDataSchemas = {
   }),
 } as const
 
+type BlockSchemaInferred = {
+  [K in keyof typeof blockDataSchemas]: z.infer<(typeof blockDataSchemas)[K]>
+}
+
+type UnionToIntersection<U> = (U extends unknown ? (arg: U) => void : never) extends (
+  arg: infer I
+) => void
+  ? I
+  : never
+
+type BlockDataKeys = Exclude<keyof typeof blockDataSchemas, "divider">
+
+/** MongoDB stores block `data` as a flat object validated per `type`. */
+export type FlatBlockData = Partial<UnionToIntersection<BlockSchemaInferred[BlockDataKeys]>>
+
 export const createBlockSchema = z.object({
   pageId: z.string().min(1),
   type: z.enum(["link", "header", "text", "divider", "social", "image", "gallery", "embed", "form", "countdown", "button", "spacer", "video"]),

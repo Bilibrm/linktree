@@ -13,24 +13,18 @@ type SpringCounterProps = {
 export function SpringCounter({ value, suffix = "", label }: SpringCounterProps) {
   const ref = useRef<HTMLDivElement>(null)
   const slideActive = useSlideActive()
-  const [started, setStarted] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
-
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  }, [])
-
-  useEffect(() => {
-    if (slideActive) setStarted(true)
-    else setStarted(false)
-  }, [slideActive])
+  const [ioStarted, setIoStarted] = useState(false)
+  const started = slideActive || ioStarted
+  const [reduceMotion] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  )
 
   useEffect(() => {
     const el = ref.current
     if (!el || slideActive) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setStarted(true)
+        if (entry.isIntersecting) setIoStarted(true)
       },
       { threshold: 0.5 }
     )

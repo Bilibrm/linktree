@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useIsClient } from "@/lib/use-is-client"
 import type { BlockComponentProps } from "./block-renderer"
 import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle, getSurfaceStyle } from "@/lib/theme-utils"
 import { Timer, Clock } from "lucide-react"
 
 export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) {
   const targetDate = data.targetDate ? new Date(data.targetDate).getTime() : 0
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
   const [timeLeft, setTimeLeft] = useState(0)
 
   const cardRadius = getCardRadius(theme)
@@ -18,13 +19,18 @@ export function CountdownBlock({ data, theme, index = 0 }: BlockComponentProps) 
   const accent = theme.accentColor || "#16302A"
 
   useEffect(() => {
-    setMounted(true)
-    setTimeLeft(targetDate - Date.now())
     if (!targetDate) return
-    const interval = setInterval(() => {
-      setTimeLeft(targetDate - Date.now())
-    }, 1000)
-    return () => clearInterval(interval)
+    let cancelled = false
+    const update = () => {
+      if (!cancelled) setTimeLeft(targetDate - Date.now())
+    }
+    const raf = requestAnimationFrame(update)
+    const interval = setInterval(update, 1000)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      clearInterval(interval)
+    }
   }, [targetDate])
 
   const unitBox = (value: string | number, label: string, isLast: boolean) => (

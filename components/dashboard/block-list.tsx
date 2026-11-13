@@ -68,7 +68,7 @@ export function BlockList({
 
       const formData = new FormData()
       formData.append("blocks", JSON.stringify(reorderData))
-      const result: any = await reorderBlocks(formData)
+      const result = await reorderBlocks(formData)
       if (result?.error) {
         toast.error("Failed to reorder blocks")
         onBlocksChange(blocks)

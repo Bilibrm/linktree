@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronsUpDown, X, XCircle } from "lucide-react"
 import { PLATFORMS, PlatformIcon } from "@/components/blocks/platform-icons"
+import type { FlatBlockData } from "@/lib/validation"
 
 export type EditorProps = {
-  data: Record<string, any>
-  onChange: (data: Record<string, any>) => void
+  data: FlatBlockData
+  onChange: (data: FlatBlockData) => void
 }
 
 function PlatformSelect({ value, onChange }: { value: string; onChange: (val: string) => void }) {
@@ -139,7 +140,7 @@ export function TextEditor({ data, onChange }: EditorProps) {
 export function SocialEditor({ data, onChange }: EditorProps) {
   return (
     <div className="space-y-2">
-      {(data.links || []).map((link: any, i: number) => (
+      {(data.links || []).map((link, i) => (
         <div key={i} className="flex gap-2 items-start">
           <div className="flex-1 space-y-1.5">
             <Label className="text-small text-muted-foreground">Platform {i + 1}</Label>
@@ -153,7 +154,7 @@ export function SocialEditor({ data, onChange }: EditorProps) {
               <Input value={link.url} placeholder="URL" onChange={(e) => { const links = [...(data.links || [])]; links[i] = { ...links[i], url: e.target.value }; onChange({ ...data, links }) }} className="flex-1 h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
             </div>
           </div>
-          <button onClick={() => { const links = (data.links || []).filter((_: any, j: number) => j !== i); onChange({ ...data, links }) }} aria-label="Remove social link" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-5">
+          <button onClick={() => { const links = (data.links || []).filter((_, j) => j !== i); onChange({ ...data, links }) }} aria-label="Remove social link" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-5">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -181,7 +182,7 @@ export function ImageEditor({ data, onChange }: EditorProps) {
 export function GalleryEditor({ data, onChange }: EditorProps) {
   return (
     <div className="space-y-2">
-      {(data.images || []).map((img: any, i: number) => (
+      {(data.images || []).map((img, i) => (
         <div key={i} className="space-y-1.5">
           <Label className="text-small text-muted-foreground">Image URL {i + 1}</Label>
           <Input value={img.src} onChange={(e) => { const images = [...(data.images || [])]; images[i] = { ...images[i], src: e.target.value }; onChange({ ...data, images }) }} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
@@ -208,7 +209,7 @@ export function FormEditor({ data, onChange }: EditorProps) {
         <Label className="text-small text-muted-foreground">Form Title</Label>
         <Input value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
       </div>
-      {(data.fields || []).map((field: any, i: number) => (
+      {(data.fields || []).map((field, i) => (
         <div key={i} className="flex gap-2 items-start">
           <div className="flex-1 space-y-1.5">
             <Label className="text-small text-muted-foreground">Field {i + 1}</Label>
@@ -216,7 +217,12 @@ export function FormEditor({ data, onChange }: EditorProps) {
               <Input value={field.label} onChange={(e) => { const fields = [...(data.fields || [])]; fields[i] = { ...fields[i], label: e.target.value }; onChange({ ...data, fields }) }} className="flex-1 h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
               <select
                 value={field.type || "text"}
-                onChange={(e) => { const fields = [...(data.fields || [])]; fields[i] = { ...fields[i], type: e.target.value }; onChange({ ...data, fields }) }}
+                onChange={(e) => {
+                  const nextType = e.target.value as "text" | "email" | "textarea" | "select"
+                  const fields = [...(data.fields || [])]
+                  fields[i] = { ...fields[i], type: nextType }
+                  onChange({ ...data, fields })
+                }}
                 className="h-9 rounded-lg bg-dashboard-bg border border-dashboard-border text-dashboard-text text-small px-2 focus:border-gold/50 focus:ring-gold/20 outline-none"
               >
                 <option value="text">Text</option>
@@ -235,7 +241,7 @@ export function FormEditor({ data, onChange }: EditorProps) {
               Required
             </label>
           </div>
-          <button onClick={() => { const fields = (data.fields || []).filter((_: any, j: number) => j !== i); onChange({ ...data, fields }) }} aria-label="Remove form field" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-6">
+          <button onClick={() => { const fields = (data.fields || []).filter((_, j) => j !== i); onChange({ ...data, fields }) }} aria-label="Remove form field" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-6">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -273,7 +279,10 @@ export function ButtonEditor({ data, onChange }: EditorProps) {
       </div>
       <div className="space-y-1.5">
         <Label className="text-small text-muted-foreground">Variant</Label>
-        <Select value={data.variant || "primary"} onValueChange={(v) => onChange({ ...data, variant: v })}>
+        <Select
+          value={data.variant || "primary"}
+          onValueChange={(v) => onChange({ ...data, variant: v as "primary" | "outline" | "ghost" })}
+        >
           <SelectTrigger className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption">
             <SelectValue />
           </SelectTrigger>

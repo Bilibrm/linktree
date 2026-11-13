@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/mongoose"
 import { Page } from "@/lib/models/page"
 import { Block } from "@/lib/models/block"
 import { DashboardClient } from "@/components/dashboard/dashboard-client"
+import { pageThemeToConfig, serializeBlockLean } from "@/lib/serialize-block"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -15,25 +16,16 @@ export default async function DashboardPage() {
 
   const blocks = await Block.find({ pageId: page._id }).sort({ order: 1 }).lean()
 
-  const serializedBlocks = blocks.map((b) => ({
-    _id: b._id.toString(),
-    pageId: b.pageId.toString(),
-    type: b.type as any,
-    order: b.order,
-    data: b.data as any,
-    startAt: b.startAt?.toISOString() ?? null,
-    endAt: b.endAt?.toISOString() ?? null,
-    isActive: b.isActive,
-  }))
+  const serializedBlocks = blocks.map((b) => serializeBlockLean(b))
 
   return (
     <DashboardClient
       pageId={page._id.toString()}
       username={session.user.username || ""}
       initialBlocks={serializedBlocks}
-      theme={page.theme as any}
+      theme={pageThemeToConfig(page.theme)}
       displayName={page.title || session.user.username || ""}
-      avatarUrl={(page as any).avatarUrl}
+      avatarUrl={undefined}
       bio={page.bio}
       title={page.title}
     />

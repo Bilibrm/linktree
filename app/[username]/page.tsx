@@ -5,6 +5,7 @@ import { User } from "@/lib/models/user"
 import { Page } from "@/lib/models/page"
 import { Block } from "@/lib/models/block"
 import { PublicPageClient } from "./public-page-client"
+import { pageThemeToConfig, serializeBlockLean } from "@/lib/serialize-block"
 
 interface Props {
   params: Promise<{ username: string }>
@@ -56,16 +57,7 @@ export default async function UserPage({ params }: Props) {
     return true
   })
 
-  const serializedBlocks = activeBlocks.map((b) => ({
-    _id: b._id.toString(),
-    pageId: b.pageId.toString(),
-    type: b.type as any,
-    order: b.order,
-    data: b.data as any,
-    startAt: b.startAt?.toISOString() ?? null,
-    endAt: b.endAt?.toISOString() ?? null,
-    isActive: b.isActive,
-  }))
+  const serializedBlocks = activeBlocks.map((b) => serializeBlockLean(b))
 
   const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${username}`
 
@@ -76,7 +68,7 @@ export default async function UserPage({ params }: Props) {
       avatarUrl={user.avatarUrl}
       bio={page.bio}
       title={page.title}
-      theme={page.theme as any}
+      theme={pageThemeToConfig(page.theme)}
       blocks={serializedBlocks}
       pageId={page._id.toString()}
       pageUrl={pageUrl}

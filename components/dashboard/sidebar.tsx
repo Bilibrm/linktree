@@ -22,7 +22,7 @@ const navItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
-export function DashboardSidebar({ username, pageId }: { username: string; pageId: string }) {
+export function DashboardSidebar({ username }: { username: string; pageId: string }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
