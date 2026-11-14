@@ -58,10 +58,31 @@ Two spot inks on paper. Pink is the only action color. Blue is the text/ink colo
 Dark mode ("darkroom"): `--paper #0F1533`, `--sheet #18204A`, `--ink #E9EAF2`,
 `--ink-soft #A3A9C8`, pink unchanged. Dashboard follows system; toggle stays.
 
+### 3.1 The ink drawer (landing + themes)
+
+A print shop owns more than two inks. The landing page and the theme system draw from
+this wider set of spot colors, always printed in **pairs** over paper, with overprint
+(multiply) where they cross:
+
+| Ink | Hex | Ink | Hex |
+|---|---|---|---|
+| Fluor pink | `#FF4FA3` | Federal blue | `#1C2A63` |
+| Sunflower | `#FFD23F` | Teal | `#00838A` |
+| Orange | `#FF6B2C` | Grass | `#18A558` |
+| Violet | `#6B4BD8` | Scarlet | `#E8352E` |
+
+Each landing section **changes ink pair** as it scrolls in (hero pink+blue → blocks
+sunflower+blue → themes orange+teal → stats grass+pink → closing pink+blue), so the page
+feels like successive print runs. The paper color can shift slightly per section too
+(a dark "darkroom" section is allowed once). The app (dashboard/editor) stays on
+paper + ink + pink.
+
 Rules:
 - Never pure-grey UI chrome. Neutrals are tints of ink on paper.
-- Pink covers < 10% of any screen. One filled pink button per view.
-- No gradients as decoration. No glows. Grain texture allowed on landing hero only.
+- In the app, pink covers < 10% of any screen. One filled pink button per view.
+- Color richness comes from flat spot inks, overprint, halftone dots and grain, not
+  from soft multi-stop gradients or glows. Grain/halftone texture allowed on landing and
+  in themes that choose it.
 - No purple-to-blue SaaS gradient, ever. `--overprint` appears only as a blend result.
 
 ## 4. Type
@@ -99,13 +120,55 @@ Rules:
 
 ## 6. Motion
 
-- **Landing only:** GSAP (+ ScrollTrigger) for the hero composition and at most one more
-  scroll moment. Loaded only on `/`, inside `gsap.context()`, cleaned up on unmount.
-  No Lenis smooth-scroll (keeps native scroll and a11y).
-- **App (auth, dashboard, editor, public):** CSS transitions only, 120–200ms,
-  `cubic-bezier(0.2, 0, 0, 1)`. Motion answers an action: block inserted, block moved,
-  saved, deleted (with undo). No entrance animations on dashboard sections.
-- `prefers-reduced-motion`: hero renders final state; all transitions become instant.
+The owner asked for a **creative, richly animated, very smooth** product. Motion is a
+headline feature on the landing page and in public-page themes, and a quiet, precise
+helper in the editor. All motion follows one metaphor: **paper moving through a press**
+(sheets slide in, inks register into place, layers separate and re-align).
+
+### 6.1 Landing — scroll choreography (GSAP + ScrollTrigger + Lenis)
+
+- **Lenis** smooth scroll on `/` only, synced to GSAP's ticker (one clock). Disabled under
+  reduced motion and on touch devices if it hurts native momentum.
+- **Hero:** on load, the two headline inks slide in from opposite sides and "register"
+  (misregistration offset eases to its final 4–6px); the proof assembles block by block.
+  On scroll, hero layers **parallax** at different depths (headline, proof, halftone
+  shapes) and the inks separate further as you leave.
+- **Blocks section:** **pinned** while each block type prints into the proof one at a
+  time, its label highlighted on the left (scrubbed to scroll).
+- **Themes section:** a **horizontal slide** track (pinned, scroll → x) of full theme
+  proofs, each in its own ink pair; the background paper/ink changes with the active theme.
+- **Stats section:** chart lines draw on (stroke-dashoffset scrubbed), counters roll.
+- **Closing:** big type sweeps in like a sheet feeding through rollers.
+- Section ink pairs crossfade per §3.1 as each section enters.
+- Decorative assets: generated SVG halftone shapes, riso blobs, registration marks,
+  paper grain. Real photos only if licensed (Unsplash-style CC0) and printed through a
+  duotone ink filter so they belong to the system.
+- Performance: animate only `transform`/`opacity`/`clip-path`; `will-change` scoped;
+  `gsap.matchMedia()` for desktop vs mobile variants (mobile: lighter, no pins that trap
+  scroll on short screens); everything inside `gsap.context()` and reverted on unmount.
+  Keep LCP text visible without JS.
+
+### 6.2 App (auth, dashboard, editor)
+
+- CSS transitions / WAAPI, 150–260ms, `cubic-bezier(0.2, 0, 0, 1)`; springy only for
+  drag-drop settle. Motion answers an action and shows what changed:
+  block inserted (prints in: clip-path wipe top→bottom), reordered (FLIP slide),
+  deleted (lifts away; undo prints it back), inspector swaps (short slide), theme change
+  (proof crossfades), save state ticks.
+- Page transitions between dashboard tabs: subtle View Transitions API crossfade where
+  supported.
+- No looping or ambient animation in the app.
+
+### 6.3 Public pages
+
+Themes may ship an **entrance** (stagger print-in, slide, fade, none) and a **hover**
+style (lift, offset-shadow, ink fill, underline), plus optional ambient background motion
+(slow halftone drift, grain shimmer) that pauses when off-screen. Visitors' reduced-motion
+setting always wins.
+
+### 6.4 Global
+
+- `prefers-reduced-motion`: final states, no parallax/pins/smooth scroll, instant transitions.
 - Remove `react-parallax`, `react-magic`, and `@react-spring/web` once nothing imports them.
 
 ## 7. Iconography
@@ -218,6 +281,35 @@ username.
 Owner's theme governs. Defaults (new pages) use Press tokens: paper background, ink text,
 pink-outlined link blocks. Footer: tiny "Made with LinkNest" link. Must score well on
 mobile LCP: no client JS beyond what blocks need (form, countdown, video facade).
+
+### 8.9 Theme system v2 (owner themes)
+
+The theme system may be rebuilt. A theme is a **composed recipe**, not a color pick:
+
+| Layer | Options (examples) |
+|---|---|
+| Palette | background, surface, text, accent, accent-text (contrast-checked) |
+| Type | font pair (display + body) from a curated list with real character |
+| Layout | `stack` (classic centered), `editorial` (left-aligned, big name), `cover` (full-bleed header image/color band), `grid` (2-col tiles for links/images), `poster` (oversized type header) |
+| Block style | `filled`, `outline`, `offset` (riso offset shadow), `ticket` (perforated edge), `glass`-free soft, `underline` (text-only list) |
+| Shape | sharp / soft / round / pill |
+| Background | flat, duotone gradient (2 stops max), halftone dots, grain, paper texture, pattern (grid, stripes, confetti shapes), image with ink overlay, slow animated (halftone drift / blob morph) |
+| Motion | entrance (print-in / slide / fade / none), hover (lift / offset / ink-fill / underline) |
+
+Ship **12–16 curated themes** that each feel like a different print object, e.g.
+`Riso` (pink+blue overprint, LinkNest default), `Darkroom` (deep blue-black, red safelight
+accent), `Blueprint` (cyan line grid, white mono-free type), `Terrazzo` (speckle pattern,
+warm stone), `Night Market` (neon-sign accents on near-navy, flicker hover),
+`Botanical` (pressed-leaf greens, editorial layout), `Ticket Stub` (perforated
+ticket blocks), `Zine` (photocopy grain, cut-paper offsets, sticker labels),
+`Poster` (oversized grotesk name, two-ink), `Sunday Paper` (newsprint, columns, still
+readable), `Arcade` (chunky pixel-shadow buttons, bright primaries), `Tape` (masking-tape
+labels on kraft), `Ocean Print` (teal+sunflower duotone), `Monochrome` (one ink, crisp).
+Names describe the look in plain words. Each theme gets a tiny live proof in the picker.
+
+Owners can start from a theme and override any layer. Old stored theme documents must map
+onto v2 (migration function at read time, no DB rewrite required): unknown/old fields →
+closest v2 values, never a crash or blank page.
 
 ## 9. Quality floor (every slice)
 
