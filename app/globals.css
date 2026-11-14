@@ -4,37 +4,132 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-  --color-ink: #0F211D;
-  --color-surface: #17332C;
-  --color-bone: #E7DFC9;
-  --color-pine: #16302A;
-  --color-gold: #D2A24C;
-  --color-coral: #DD5B39;
+/* ─────────────────────────────────────────────────────────────
+   LinkNest v2 "Press" — tokens (DESIGN_SYSTEM.md §3–§5)
+   Two spot inks on paper. Pink is the only action color.
+   ───────────────────────────────────────────────────────────── */
 
+:root {
+  /* §3 color */
+  --paper: #ECEDE8;
+  --sheet: #F8F8F5;
+  --ink: #1C2A63;
+  --ink-soft: #55608F;
+  --pink: #FF4FA3;
+  --pink-ink: #C2186F;
+  --sun: #FFE14D;
+  --overprint: #7A2E8E;
+  --danger: #D23A2A;
+  /* Text that sits on a pink or sun fill. Stays dark in both modes (5.9:1 on pink). */
+  --on-pink: #0F1533;
+  /* Danger as text on paper (the fill token is 4.1:1, too low for small text). */
+  --danger-ink: #A92B1E;
+}
+
+/* Darkroom */
+.dark {
+  --paper: #0F1533;
+  --sheet: #18204A;
+  --ink: #E9EAF2;
+  --ink-soft: #A3A9C8;
+  --pink-ink: #FF8FC4;
+  --danger-ink: #FF9484;
+  color: var(--ink);
+}
+
+/* Everything derived from the raw tokens. Declared on both scopes so the values are
+   recomputed inside .dark instead of inheriting the light results from :root. */
+:root,
+.dark {
+  /* §5 elevation is ink, not shadow */
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --rule-strong: color-mix(in srgb, var(--ink) 32%, transparent);
+  --tint: color-mix(in srgb, var(--ink) 6%, var(--paper));
+  --scrim: color-mix(in srgb, #0F1533 45%, transparent);
+  --shadow-offset: 3px 3px 0 color-mix(in srgb, var(--ink) 20%, transparent);
+  --shadow-misregistered: 4px 4px 0 var(--pink);
+
+  /* One family, used through its width axis */
+  --font-press: var(--font-archivo), "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-press);
+  --font-display: var(--font-press);
+  --font-mono: var(--font-press);
+
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+
+  /* shadcn semantic slots, pointed at Press tokens */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--sheet);
+  --card-foreground: var(--ink);
+  --popover: var(--sheet);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--tint);
+  --secondary-foreground: var(--ink);
+  --muted: var(--tint);
+  --muted-foreground: var(--ink-soft);
+  --accent: color-mix(in srgb, var(--ink) 9%, var(--sheet));
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--rule);
+  --input: var(--rule-strong);
+  --ring: var(--pink);
+  --chart-1: var(--ink);
+  --chart-2: var(--pink);
+  --chart-3: var(--ink-soft);
+  --chart-4: var(--sun);
+  --chart-5: var(--overprint);
+  --radius: 0.5rem;
+  --sidebar: var(--sheet);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--pink);
+  --sidebar-primary-foreground: var(--on-pink);
+  --sidebar-accent: var(--tint);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--rule);
+  --sidebar-ring: var(--pink);
+
+  --dashboard-bg: var(--paper);
+  --dashboard-surface: var(--sheet);
+  --dashboard-text: var(--ink);
+  --dashboard-border: var(--rule);
+}
+.dark {
+  --scrim: color-mix(in srgb, #05081A 60%, transparent);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-pink: var(--pink);
+  --color-pink-ink: var(--pink-ink);
+  --color-sun: var(--sun);
+  --color-overprint: var(--overprint);
+  --color-danger: var(--danger);
+  --color-danger-ink: var(--danger-ink);
+  --color-on-pink: var(--on-pink);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-tint: var(--tint);
+  --color-scrim: var(--scrim);
+
+  --font-sans: var(--font-press);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
 
-  --text-display-xl: 4.5rem;
-  --text-display-xl--line-height: 0.9;
-  --text-display-xl--font-weight: 900;
-  --text-display-lg: 3rem;
-  --text-display-lg--line-height: 1.05;
-  --text-display-lg--font-weight: 800;
-  --text-display: 2rem;
-  --text-display--line-height: 1.1;
-  --text-display--font-weight: 700;
-  --text-heading: 1.25rem;
-  --text-heading--line-height: 1.3;
-  --text-heading--font-weight: 600;
-  --text-body: 1rem;
-  --text-body--line-height: 1.6;
-  --text-body--font-weight: 400;
-  --text-caption: 0.875rem;
-  --text-caption--line-height: 1.5;
-  --text-small: 0.75rem;
-  --text-small--line-height: 1.4;
+  /* Radius with meaning: label = inputs, buttons, tags. panel = panels, blocks, menus. */
+  --radius-label: 2px;
+  --radius-panel: 10px;
+
+  --shadow-offset: var(--shadow-offset);
+  --shadow-misregistered: var(--shadow-misregistered);
+
+  --ease-press: var(--ease-press);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -44,8 +139,6 @@
   --color-dashboard-surface: var(--dashboard-surface);
   --color-dashboard-text: var(--dashboard-text);
   --color-dashboard-border: var(--dashboard-border);
-  --color-dashboard-bg\/50: color-mix(in srgb, var(--dashboard-bg) 50%, transparent);
-  --color-dashboard-surface\/50: color-mix(in srgb, var(--dashboard-surface) 50%, transparent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -73,6 +166,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Public pages size their owner-chosen corners from this scale. Do not repoint it. */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -80,91 +175,182 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── v1 compatibility, used by dashboard and block code that later slices rewrite.
+        Delete each line once nothing references it. ── */
+  --color-gold: var(--pink-ink);
+  --color-coral: var(--danger);
+  --color-bone: var(--ink);
+  --color-surface: var(--sheet);
+  --text-display: 2rem;
+  --text-display--line-height: 1.1;
+  --text-display--font-weight: 700;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.3;
+  --text-heading--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.55;
+  --text-caption: 0.875rem;
+  --text-caption--line-height: 1.45;
+  --text-small: 0.75rem;
+  --text-small--line-height: 1.4;
 }
 
-:root {
-  --background: #E7DFC9;
-  --foreground: #16302A;
-  --dashboard-bg: #E7DFC9;
-  --dashboard-surface: #DED5BD;
-  --dashboard-text: #16302A;
-  --dashboard-border: #C9BFA8;
-  --card: #ECE6D6;
-  --card-foreground: #16302A;
-  --popover: #E7DFC9;
-  --popover-foreground: #16302A;
-  --primary: #16302A;
-  --primary-foreground: #E7DFC9;
-  --secondary: #D2A24C;
-  --secondary-foreground: #0F211D;
-  --muted: #DED5BD;
-  --muted-foreground: #4A6A62;
-  --accent: #DD5B39;
-  --accent-foreground: #E7DFC9;
-  --destructive: #DD5B39;
-  --border: #C9BFA8;
-  --input: #C9BFA8;
-  --ring: #D2A24C;
-  --chart-1: #D2A24C;
-  --chart-2: #17332C;
-  --chart-3: #DD5B39;
-  --chart-4: #16302A;
-  --chart-5: #0F211D;
-  --radius: 0.5rem;
-  --sidebar: #ECE6D6;
-  --sidebar-foreground: #16302A;
-  --sidebar-primary: #D2A24C;
-  --sidebar-primary-foreground: #0F211D;
-  --sidebar-accent: #DED5BD;
-  --sidebar-accent-foreground: #16302A;
-  --sidebar-border: #C9BFA8;
-  --sidebar-ring: #D2A24C;
+/* §4 type scale. Named type-* so they never collide with Tailwind's text-* colors or
+   the v1 text-* sizes above. */
+@utility type-display {
+  font-size: clamp(3rem, 9vw, 7.5rem);
+  line-height: 0.88;
+  font-weight: 850;
+  font-stretch: 125%;
+  letter-spacing: -0.035em;
 }
-
-.dark {
-  --background: #0F211D;
-  --foreground: #E7DFC9;
-  --dashboard-bg: #0F211D;
-  --dashboard-surface: #17332C;
-  --dashboard-text: #E7DFC9;
-  --dashboard-border: #1F4038;
-  --card: #17332C;
-  --card-foreground: #E7DFC9;
-  --popover: #17332C;
-  --popover-foreground: #E7DFC9;
-  --primary: #D2A24C;
-  --primary-foreground: #0F211D;
-  --secondary: #17332C;
-  --secondary-foreground: #E7DFC9;
-  --muted: #1A3A32;
-  --muted-foreground: #8DA89E;
-  --accent: #DD5B39;
-  --accent-foreground: #E7DFC9;
-  --destructive: #DD5B39;
-  --border: #1F4038;
-  --input: #1F4038;
-  --ring: #D2A24C;
-  --chart-1: #D2A24C;
-  --chart-2: #17332C;
-  --chart-3: #DD5B39;
-  --chart-4: #E7DFC9;
-  --chart-5: #0F211D;
-  --sidebar: #0F211D;
-  --sidebar-foreground: #E7DFC9;
-  --sidebar-primary: #D2A24C;
-  --sidebar-primary-foreground: #0F211D;
-  --sidebar-accent: #17332C;
-  --sidebar-accent-foreground: #E7DFC9;
-  --sidebar-border: #1F4038;
-  --sidebar-ring: #D2A24C;
+@utility type-title-1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  font-weight: 800;
+  font-stretch: 115%;
+  letter-spacing: -0.02em;
+}
+@utility type-title-2 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-weight: 700;
+  font-stretch: 105%;
+  letter-spacing: -0.01em;
+}
+@utility type-title-3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 650;
+  font-stretch: 100%;
+}
+@utility type-body {
+  font-size: 1rem;
+  line-height: 1.55;
+  font-weight: 400;
+  font-stretch: 100%;
+}
+@utility type-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 450;
+  font-stretch: 100%;
+}
+@utility type-micro {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  font-weight: 600;
+  font-stretch: 100%;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-stretch: 100%;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--sun);
+    color: var(--on-pink);
+  }
+}
+
+/* v1 compatibility: gold was both a text color and a fill. As text and tint it maps to
+   the text-safe pink; as a solid fill it is the pink ink with dark text. Unlayered so
+   these win over the generated utilities. */
+.bg-gold {
+  background-color: var(--pink);
+  color: var(--on-pink);
+}
+.hover\:bg-gold\/90:hover {
+  background-color: color-mix(in srgb, var(--pink) 86%, var(--on-pink));
+}
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* §9 visible focus on every interactive element. Unlayered on purpose: it has to win over
+   the `outline-none` utilities inside the shared primitives. */
+:where(a, button, input, textarea, select, summary, [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="combobox"], [tabindex]):focus-visible {
+  outline: 2px solid var(--pink);
+  outline-offset: 2px;
+}
+:where([tabindex="-1"]):focus-visible {
+  outline: none;
+}
+
+/* §6 app motion: CSS only, short, instant when reduced. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Toasts: sheet surface, ink rule, offset shadow. */
+.cn-toast {
+  border-radius: var(--radius-panel) !important;
+  border: 1px solid var(--rule-strong) !important;
+  box-shadow: var(--shadow-offset) !important;
+  font-family: var(--font-body) !important;
+}
+
+/* ── Landing hero: two-ink overprint headline ── */
+.overprint {
+  position: relative;
+  display: block;
+  color: var(--ink);
+  isolation: isolate;
+}
+.overprint > .overprint-pink,
+.overprint > .overprint-blue {
+  display: block;
+}
+/* The pink plate goes down first, slightly out of register. */
+.overprint > .overprint-pink {
+  position: absolute;
+  inset: 0;
+  color: var(--pink);
+  transform: translate(-0.045em, 0.04em);
+  user-select: none;
+  pointer-events: none;
+}
+/* The blue plate prints over it; where they cross the inks multiply. */
+.overprint > .overprint-blue {
+  position: relative;
+  color: var(--ink);
+  mix-blend-mode: multiply;
+}
+
+/* Paper grain, hero only (§3). */
+.press-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .39 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hero proof: blocks wait off the sheet until the timeline places them. Scoped to
+   motion-allowed and scripting-enabled so everyone else gets the composed page. */
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  [data-compose="pending"] [data-compose-item] {
+    opacity: 0;
   }
 }
 
@@ -196,7 +382,7 @@
   }
 }
 
-/* Shared "glass" surface used by non-featured links, forms, countdown, and embed
+/* Shared tinted surface used by non-featured links, forms, countdown, and embed
    fallback cards. Each element sets its own --surface-hover-bg inline, so this
    works regardless of ancestor context (real page, dashboard preview, or editor). */
 .theme-surface {
@@ -206,24 +392,7 @@
   background: var(--surface-hover-bg);
 }
 
-/* Landing backdrop: slow drift for floating link cards */
-@keyframes landing-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
-.landing-float {
-  animation: landing-float 9s ease-in-out infinite;
-}
-[data-low-power="true"] .landing-float {
-  animation: none !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-float {
-    animation: none !important;
-  }
-}
-
-/* Animated gradient background keyframes */
+/* Animated gradient background keyframes (owner themes) */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -253,10 +422,8 @@
   height: 4px;
 }
 
-/* ── Bento block decorations ── */
+/* ── Public-page block decorations (owner themes) ── */
 
-/* A soft diagonal light sweep on hover — used on link tiles/banners for a
-   crafted, tactile feel. Self-contained (no extra DOM node needed). */
 .tile-shine {
   position: relative;
   isolation: isolate;
@@ -275,12 +442,7 @@
 .tile-shine:hover::after {
   background-position: 100% 100%;
 }
-@media (prefers-reduced-motion: reduce) {
-  .tile-shine::after { transition: none; }
-}
 
-/* Subtle gradient ring around the profile avatar, fading from the theme's
-   accent color to transparent. */
 .avatar-ring {
   background: conic-gradient(from 200deg, var(--page-accent), transparent 65%);
 }
@@ -294,16 +456,7 @@
   border-color: var(--input-focus-border);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .react-parallax-bgimage,
-  .react-parallax-content {
-    transform: none !important;
-  }
-}
-
-/* Landing: visible focus for keyboard users on dark green */
-.bg-ink a:focus-visible,
-.bg-ink button:focus-visible {
-  outline: 2px solid #D2A24C;
-  outline-offset: 3px;
+/* An input living inside a composite field (name-claim). The wrapper draws the focus ring. */
+.press-bare-input:focus-visible {
+  outline: none;
 }

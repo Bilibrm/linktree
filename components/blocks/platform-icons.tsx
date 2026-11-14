@@ -79,7 +79,7 @@ export function PlatformIconRow({ platforms, selected, onSelect }: { platforms: 
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
             selected === p.id
               ? "bg-gold text-ink ring-1 ring-gold"
-              : "bg-ink text-muted-foreground hover:text-bone hover:bg-surface border border-white/5"
+              : "bg-tint text-muted-foreground hover:text-foreground hover:bg-accent border border-rule"
           }`}
         >
           <PlatformIcon platform={p.id} className="w-4 h-4" />

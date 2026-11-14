@@ -1,5 +1,28 @@
 import { ImageResponse } from "next/og"
 
+export const alt = "LinkNest — One page for all of it"
+export const size = { width: 1200, height: 630 }
+export const contentType = "image/png"
+
+// Press tokens (DESIGN_SYSTEM.md §3). ImageResponse cannot read CSS variables.
+const paper = "#ECEDE8"
+const ink = "#1C2A63"
+const pink = "#FF4FA3"
+const overprint = "#7A2E8E"
+
+const headline = {
+  position: "absolute" as const,
+  left: 0,
+  top: 0,
+  display: "flex",
+  flexDirection: "column" as const,
+  fontSize: 136,
+  fontWeight: 900,
+  lineHeight: 0.9,
+  letterSpacing: "-0.04em",
+  textTransform: "uppercase" as const,
+}
+
 export default function OpenGraphImage() {
   return new ImageResponse(
     <div
@@ -8,43 +31,38 @@ export default function OpenGraphImage() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#0F211D",
-        fontFamily: "Fraunces, Georgia, serif",
-        color: "#E7DFC9",
-        padding: 60,
+        justifyContent: "space-between",
+        backgroundColor: paper,
+        color: ink,
+        padding: 64,
+        fontFamily: "sans-serif",
       }}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 64 64" style={{ marginBottom: 24 }}>
-        <circle cx="32" cy="14" r="5" fill="none" stroke="#D2A24C" strokeWidth="3" />
-        <path d="M10,38 Q20,24 32,24 Q44,24 54,38" fill="none" stroke="#D2A24C" strokeWidth="3" strokeLinecap="round" />
-        <path d="M14,44 Q22,32 32,32 Q42,32 50,44" fill="none" stroke="#D2A24C" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M19,50 Q26,40 32,40 Q38,40 45,50" fill="none" stroke="#D2A24C" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-      <div
-        style={{
-          fontSize: 72,
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          color: "#E7DFC9",
-          marginBottom: 16,
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", fontSize: 34, fontWeight: 800 }}>
+        <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 16 }}>
+          <circle cx="24" cy="32" r="18" fill={pink} />
+          <circle cx="40" cy="32" r="18" fill={ink} />
+          <path d="M32 15.88A18 18 0 0 1 32 48.12 18 18 0 0 1 32 15.88Z" fill={overprint} />
+        </svg>
         LinkNest
       </div>
-      <div
-        style={{
-          fontSize: 28,
-          color: "#8DA89E",
-          textAlign: "center",
-          maxWidth: 500,
-          lineHeight: 1.4,
-        }}
-      >
-        Your corner of the web
+
+      {/* Two plates, slightly out of register */}
+      <div style={{ display: "flex", position: "relative", height: 380 }}>
+        <div style={{ ...headline, color: pink, left: -8, top: 7 }}>
+          <span>One page</span>
+          <span>for all</span>
+          <span>of it.</span>
+        </div>
+        <div style={{ ...headline, color: ink }}>
+          <span>One page</span>
+          <span>for all</span>
+          <span>of it.</span>
+        </div>
       </div>
+
+      <div style={{ display: "flex", fontSize: 30, fontWeight: 600 }}>Free and open source link-in-bio pages</div>
     </div>,
-    { width: 1200, height: 630 },
+    size,
   )
 }

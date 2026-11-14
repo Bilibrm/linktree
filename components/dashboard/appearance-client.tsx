@@ -17,7 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { PublicPreview } from "@/components/blocks/public-preview"
-import type { IBlock, ThemeConfig, ThemePreset } from "@/types"
+import type { IBlock, ThemeConfig } from "@/types"
+import { themePresets, presetColors } from "@/lib/theme-presets"
 
 const DEFAULT_PRESET_THEME: ThemeConfig = {
   preset: "minimal",
@@ -39,16 +40,7 @@ const DEFAULT_PRESET_THEME: ThemeConfig = {
   customCSS: "",
 }
 
-const presets: { name: ThemePreset; label: string; colors: { bg: string; accent: string; btn: string; text: string } }[] = [
-  { name: "minimal", label: "Minimal", colors: { bg: "#ffffff", accent: "#000000", btn: "#000000", text: "#ffffff" } },
-  { name: "dark", label: "Dark", colors: { bg: "#0a0a0a", accent: "#ffffff", btn: "#ffffff", text: "#0a0a0a" } },
-  { name: "vibrant", label: "Vibrant", colors: { bg: "#f0f0ff", accent: "#6366f1", btn: "#6366f1", text: "#ffffff" } },
-  { name: "nature", label: "Nature", colors: { bg: "#f0fdf4", accent: "#16a34a", btn: "#16a34a", text: "#ffffff" } },
-  { name: "ocean", label: "Ocean", colors: { bg: "#f0f9ff", accent: "#0284c7", btn: "#0284c7", text: "#ffffff" } },
-  { name: "sunset", label: "Sunset", colors: { bg: "#fef2f2", accent: "#e11d48", btn: "#e11d48", text: "#ffffff" } },
-  { name: "mono", label: "Monochrome", colors: { bg: "#fafafa", accent: "#525252", btn: "#525252", text: "#fafafa" } },
-  { name: "bold", label: "Bold", colors: { bg: "#000000", accent: "#facc15", btn: "#facc15", text: "#000000" } },
-]
+const presets = themePresets
 
 const fontPairs = [
   { value: "geist-inter", label: "Geist + Inter", display: "Geist", body: "Inter" },
@@ -203,11 +195,7 @@ export function AppearanceClient({
                 onClick={() => {
                   setTheme({
                     ...DEFAULT_PRESET_THEME,
-                    preset: p.name,
-                    backgroundColor: p.colors.bg,
-                    buttonColor: p.colors.btn,
-                    buttonTextColor: p.colors.text,
-                    accentColor: p.colors.accent,
+                    ...presetColors(p),
                   })
                 }}
                 className={`rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${

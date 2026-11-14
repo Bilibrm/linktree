@@ -8,7 +8,7 @@ test.describe("Public page theming", () => {
 
   test("auth page loads", async ({ page }) => {
     await page.goto("/auth/login")
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Log in" })).toBeVisible()
   })
 
   test("scrollbar styles are injected", async ({ page }) => {

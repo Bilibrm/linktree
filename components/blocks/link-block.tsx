@@ -69,7 +69,7 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
           </div>
         )}
         <div className="relative z-[2] flex-1 min-w-0">
-          <span className="block text-[10px] uppercase tracking-widest font-semibold opacity-50 mb-0.5">Featured</span>
+          <span className="block text-xs font-semibold opacity-60 mb-0.5">Featured</span>
           <span className="block text-base font-bold truncate">{data.title || "Untitled link"}</span>
         </div>
         <ArrowUpRight className="relative z-[2] shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform w-4 h-4" />

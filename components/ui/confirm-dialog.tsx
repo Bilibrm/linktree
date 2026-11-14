@@ -37,8 +37,8 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-display text-heading">{title}</DialogTitle>
-          <DialogDescription className="text-caption text-muted-foreground">{description}</DialogDescription>
+          <DialogTitle className="type-title-3">{title}</DialogTitle>
+          <DialogDescription className="type-small text-muted-foreground">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
@@ -51,7 +51,7 @@ export function ConfirmDialog({
           <Button
             onClick={onConfirm}
             disabled={loading}
-            className={variant === "destructive" ? "bg-coral text-white hover:bg-coral/90" : "bg-gold text-ink hover:bg-gold/90"}
+            variant={variant === "destructive" ? "destructive" : "pink"}
           >
             {loading ? "..." : confirmLabel}
           </Button>

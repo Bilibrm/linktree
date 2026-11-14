@@ -1,11 +1,18 @@
 import type { Metadata } from "next"
+import { normalizeUsername } from "@/lib/site"
 import { SignupForm } from "./signup-form"
 
 export const metadata: Metadata = {
-  title: "Create Your Page — LinkNest",
-  description: "Create your LinkNest page. One page to share everything you are. Free to start.",
+  title: "Claim your name — LinkNest",
+  description: "Claim your LinkNest name and start your page. Free and open source.",
 }
 
-export default function SignupPage() {
-  return <SignupForm />
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const { username } = await searchParams
+  const initial = typeof username === "string" ? normalizeUsername(username) : ""
+  return <SignupForm initialUsername={initial} />
 }

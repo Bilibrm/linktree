@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#FFE14D"/>
+  <g style="mix-blend-mode:multiply"><path d="M0 400 200 60l200 340z" fill="#FF4FA3"/></g>
+  <g style="mix-blend-mode:multiply"><circle cx="200" cy="150" r="70" fill="#3D5BD9"/></g>
+</svg>

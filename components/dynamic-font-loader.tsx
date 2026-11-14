@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ownerFrauncesFamily } from "@/lib/owner-fonts"
 
 /**
- * Font pairings that are NOT covered by the root layout's
- * Fraunces + Public Sans + IBM Plex Mono and therefore need
- * a dynamic Google Fonts stylesheet.
+ * Owner-chosen font pairings for public pages. Fraunces + Public Sans ships with the
+ * route through next/font (see lib/owner-fonts.ts); every other pair needs a dynamic
+ * Google Fonts stylesheet.
  */
 const FONT_LINKS: Record<string, string> = {
   "geist-inter": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
@@ -19,7 +20,7 @@ const FONT_LINKS: Record<string, string> = {
  */
 const FONT_VARS: Record<string, string> = {
   "geist-inter": "'Inter', 'Public Sans', sans-serif",
-  "fraunces-publicsans": "'Fraunces', 'Public Sans', serif",
+  "fraunces-publicsans": ownerFrauncesFamily,
   "dm-sans": "'DM Sans', sans-serif",
   "space-mono": "'Space Grotesk', sans-serif",
   "serif-sans": "'Playfair Display', 'Inter', serif",

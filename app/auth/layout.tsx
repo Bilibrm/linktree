@@ -1,50 +1,23 @@
-"use client"
-
 import Link from "next/link"
+import { Wordmark } from "@/components/brand/wordmark"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-[100dvh] flex">
-      {/* Brand panel — desktop only */}
-      <div className="hidden lg:flex lg:w-[45%] bg-ink relative overflow-hidden flex-col justify-between p-10">
-        {/* topographic contours */}
-        <div className="absolute inset-0 pointer-events-none select-none">
-          <svg className="w-full h-full opacity-[0.04]" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice">
-            {[60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720].map((y) => (
-              <path key={y} d={`M0,${y} Q80,${y - 15} 160,${y} T320,${y} T480,${y} T600,${y}`} fill="none" stroke="currentColor" className="text-gold" strokeWidth="0.5" />
-            ))}
-          </svg>
-        </div>
-        {/* subtle trail line */}
-        <div className="absolute left-8 top-0 bottom-0 w-px opacity-10 hidden xl:block">
-          <div className="w-full h-full bg-gradient-to-b from-transparent via-gold to-transparent" />
-        </div>
-        <div className="relative z-10">
-          <Link href="/"><img src="/logo.svg" alt="LinkNest" className="h-6" /></Link>
-        </div>
-        <div className="relative z-10 max-w-xs">
-          <p className="text-body text-muted-foreground leading-relaxed">
-            Your corner of the web. One page, everything you share, and the numbers to prove it works.
-          </p>
-        </div>
-        <div className="relative z-10 text-small text-muted-foreground/40 flex items-center gap-3">
-          <span>Open source. No tracking.</span>
-          <Link href="/privacy" className="hover:text-gold transition-colors underline underline-offset-2 decoration-muted-foreground/20">Privacy</Link>
-        </div>
-      </div>
-
-      {/* Form panel */}
-      <div className="flex-1 flex flex-col bg-bone text-ink">
-        {/* mobile brand header */}
-        <div className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-ink/5">
-          <Link href="/"><img src="/logo.svg" alt="LinkNest" className="h-5" /></Link>
-        </div>
-        <div className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-sm">
-            {children}
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-dvh flex-col bg-paper text-ink">
+      <header className="mx-auto w-full max-w-6xl px-5 pt-4 sm:px-8 sm:pt-6">
+        <Wordmark />
+      </header>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-10 pb-16 sm:px-8 sm:pt-16">
+        <div className="w-full max-w-[400px]">{children}</div>
+      </main>
+      <footer className="mx-auto w-full max-w-6xl px-5 pb-6 sm:px-8">
+        <p className="type-small text-ink-soft">
+          Free and open source.{" "}
+          <Link href="/privacy" className="inline-flex min-h-11 items-center text-ink underline underline-offset-4">
+            Privacy
+          </Link>
+        </p>
+      </footer>
     </div>
   )
 }

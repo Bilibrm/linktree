@@ -24,7 +24,7 @@ export function DashboardToaster(props: Partial<ToasterProps>) {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--border-radius": "var(--radius-panel)",
         } as React.CSSProperties
       }
       toastOptions={{
