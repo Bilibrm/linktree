@@ -17,6 +17,7 @@ export function GalleryBlock({ data, theme, index = 0 }: BlockComponentProps) {
           key={i}
           className={`overflow-hidden aspect-square ${radius} ${shadow} relative group ${images.length >= 3 && i === 0 ? "col-span-2 row-span-2" : ""}`}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- owner-supplied remote image URL from any host */}
           <img
             src={img.src}
             alt={img.alt || `Gallery ${i + 1}`}

@@ -151,6 +151,7 @@ export function PublicPageClient({
         }}
       >
         {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- owner-supplied avatar URL; its host is not guaranteed to be in next.config remotePatterns
           <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
         ) : (
           displayName.charAt(0).toUpperCase()
@@ -213,7 +214,7 @@ export function PublicPageClient({
               {displayName}
             </h1>
 
-            {title && (
+            {title && title !== displayName && (
               <p className="text-sm text-center lg:text-left mt-1.5 leading-snug" style={{ color: "var(--page-accent)", opacity: 0.65 }}>
                 {title}
               </p>

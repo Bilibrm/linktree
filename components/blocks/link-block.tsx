@@ -28,7 +28,9 @@ export function LinkBlock({ data, blockId, pageId, theme, index = 0 }: BlockComp
 
   const renderIcon = (size: string) => {
     if (data.icon) return <PlatformIcon platform={data.icon} className={size} />
+    // eslint-disable-next-line @next/next/no-img-element -- owner-supplied remote thumbnail URL from any host
     if (data.thumbnailUrl) return <img src={data.thumbnailUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
+    // eslint-disable-next-line @next/next/no-img-element -- third-party favicon for an owner-supplied link
     if (faviconUrl) return <img src={faviconUrl} alt="" loading="lazy" className="w-full h-full object-contain p-1" />
     return null
   }

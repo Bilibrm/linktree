@@ -1,3 +1,4 @@
+import { pageUrl } from "@/lib/site"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { connectDB } from "@/lib/db/mongoose"
@@ -59,7 +60,7 @@ export default async function UserPage({ params }: Props) {
 
   const serializedBlocks = activeBlocks.map((b) => serializeBlockLean(b))
 
-  const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${username}`
+  const publicUrl = pageUrl(username)
 
   return (
     <PublicPageClient
@@ -71,7 +72,7 @@ export default async function UserPage({ params }: Props) {
       theme={pageThemeToConfig(page.theme)}
       blocks={serializedBlocks}
       pageId={page._id.toString()}
-      pageUrl={pageUrl}
+      pageUrl={publicUrl}
       visibility={page.visibility || "public"}
       pageHasPassword={!!page.passwordHash}
     />

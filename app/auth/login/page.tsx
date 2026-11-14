@@ -7,5 +7,9 @@ export const metadata: Metadata = {
 }
 
 export default function LoginPage() {
-  return <LoginForm />
+  return (
+    <div className="w-full max-w-[400px]">
+      <LoginForm />
+    </div>
+  )
 }

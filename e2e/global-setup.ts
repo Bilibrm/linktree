@@ -1,8 +1,9 @@
-import { chromium } from "@playwright/test"
+import { chromium, type FullConfig } from "@playwright/test"
 import * as fs from "fs"
 import * as path from "path"
 
-async function globalSetup() {
+async function globalSetup(config: FullConfig) {
+  const baseURL = config.projects[0]?.use.baseURL || "http://localhost:3000"
   const browser = await chromium.launch()
   const page = await browser.newPage()
 
@@ -15,7 +16,7 @@ async function globalSetup() {
   }
 
   // Go to signup
-  await page.goto("http://localhost:3000/auth/signup")
+  await page.goto(`${baseURL}/auth/signup`)
 
   // Wait for the form to load
   await page.waitForSelector("#username", { timeout: 10000 })

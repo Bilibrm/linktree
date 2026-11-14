@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/site"
 import type { Metadata, Viewport } from "next"
 import { Archivo } from "next/font/google"
 import "./globals.css"
@@ -17,7 +18,7 @@ const archivo = Archivo({
   display: "swap",
 })
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://linknest.app"
+const baseUrl = SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

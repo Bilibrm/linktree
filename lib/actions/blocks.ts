@@ -1,12 +1,21 @@
 "use server"
 
+import mongoose from "mongoose"
 import { auth } from "@/lib/auth"
 import { connectDB } from "@/lib/db/mongoose"
 import { Block } from "@/lib/models/block"
 import { Page } from "@/lib/models/page"
+import { ClickEvent } from "@/lib/models/click-event"
+import { FormSubmission } from "@/lib/models/form-submission"
 import { createBlockSchema, updateBlockSchema, reorderBlocksSchema } from "@/lib/validation"
 import { serializeBlockLean, type LeanBlockDoc } from "@/lib/serialize-block"
 import { revalidatePath } from "next/cache"
+
+/** The editor route, and the owner’s public page so visitors get the change (it is statically cached). */
+function revalidateEditorAndPublicPage(username?: string) {
+  revalidatePath("/dashboard")
+  if (username) revalidatePath(`/${username}`)
+}
 
 async function getOwnedPage(pageId: string, userId: string) {
   const page = await Page.findOne({ _id: pageId, userId })
@@ -35,14 +44,22 @@ export async function getBlocks(pageId: string) {
   })
 }
 
+/**
+ * Create a block. Without `position` it is appended, as before.
+ * With `position` (0-based index in the page's current order) it is inserted there and the
+ * page is renumbered around it. `restoreId` and `isActive` let an undo bring a deleted
+ * block back under its original id, so its clicks and form entries stay attached.
+ */
 export async function createBlock(formData: FormData) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   const userId = session.user.id
   const raw = Object.fromEntries(formData)
+  const { position: rawPosition, restoreId: rawRestoreId, isActive: rawIsActive, order: rawOrder, ...rest } = raw
   const parsed = createBlockSchema.safeParse({
-    ...raw,
+    ...rest,
+    order: typeof rawOrder === "string" && rawOrder !== "" ? Number(rawOrder) : undefined,
     data: raw.data ? JSON.parse(raw.data as string) : {},
   })
 
@@ -50,22 +67,55 @@ export async function createBlock(formData: FormData) {
     return { error: parsed.error.flatten().fieldErrors }
   }
 
+  const position = typeof rawPosition === "string" && /^\d+$/.test(rawPosition) ? Number(rawPosition) : undefined
+  const restoreId =
+    typeof rawRestoreId === "string" && mongoose.isValidObjectId(rawRestoreId) ? rawRestoreId : undefined
+
   await connectDB()
   await getOwnedPage(parsed.data.pageId, userId)
 
-  const maxOrder = await Block.findOne({ pageId: parsed.data.pageId }).sort({ order: -1 }).select("order").lean()
-  const order = parsed.data.order ?? (maxOrder ? maxOrder.order + 1 : 0)
+  if (restoreId && (await Block.exists({ _id: restoreId }))) {
+    return { error: { restoreId: ["That block already exists"] } }
+  }
+  if (restoreId) {
+    // An id can only come back on the page it lived on: its clicks and form entries are
+    // read by block id, so it must never be claimed by another page.
+    const foreign = { blockId: restoreId, pageId: { $ne: parsed.data.pageId } }
+    if ((await ClickEvent.exists(foreign)) || (await FormSubmission.exists(foreign))) {
+      return { error: { restoreId: ["That block belongs to another page"] } }
+    }
+  }
+
+  let order: number
+  if (position !== undefined) {
+    // Stored orders can have gaps, so renumber the whole page around the new slot.
+    const existing = await Block.find({ pageId: parsed.data.pageId }).sort({ order: 1 }).select("_id").lean()
+    const index = Math.min(position, existing.length)
+    const operations = existing.map((b, i) => ({
+      updateOne: {
+        filter: { _id: b._id, pageId: parsed.data.pageId },
+        update: { $set: { order: i < index ? i : i + 1 } },
+      },
+    }))
+    if (operations.length > 0) await Block.bulkWrite(operations)
+    order = index
+  } else {
+    const maxOrder = await Block.findOne({ pageId: parsed.data.pageId }).sort({ order: -1 }).select("order").lean()
+    order = parsed.data.order ?? (maxOrder ? maxOrder.order + 1 : 0)
+  }
 
   const block = await Block.create({
+    ...(restoreId ? { _id: restoreId } : {}),
     pageId: parsed.data.pageId,
     type: parsed.data.type,
     data: parsed.data.data,
     order,
     startAt: parsed.data.startAt || null,
     endAt: parsed.data.endAt || null,
+    ...(rawIsActive === "false" ? { isActive: false } : {}),
   })
 
-  revalidatePath("/dashboard")
+  revalidateEditorAndPublicPage(session.user.username)
   const plain = block.toObject()
   return { success: true, block: serializeBlock(plain) }
 }
@@ -76,7 +126,7 @@ function serializeBlock(b: Record<string, unknown>) {
     pageId: String(b.pageId),
     type: b.type,
     order: b.order,
-    data: b.data,
+    data: b.data ?? {},
     startAt: b.startAt ? new Date(b.startAt as Date).toISOString() : null,
     endAt: b.endAt ? new Date(b.endAt as Date).toISOString() : null,
     isActive: b.isActive,
@@ -91,6 +141,8 @@ export async function updateBlock(blockId: string, formData: FormData) {
   const raw = Object.fromEntries(formData)
   const parsed = updateBlockSchema.safeParse({
     ...raw,
+    // FormData only carries strings.
+    isActive: raw.isActive === "true" ? true : raw.isActive === "false" ? false : undefined,
     data: raw.data ? JSON.parse(raw.data as string) : undefined,
   })
 
@@ -113,7 +165,7 @@ export async function updateBlock(blockId: string, formData: FormData) {
 
   await Block.findByIdAndUpdate(blockId, updates)
 
-  revalidatePath("/dashboard")
+  revalidateEditorAndPublicPage(session.user.username)
   return { success: true }
 }
 
@@ -131,15 +183,19 @@ export async function reorderBlocks(formData: FormData) {
 
   await connectDB()
 
+  // Only the caller's own page: a block id from someone else's page matches nothing.
+  const page = await Page.findOne({ userId: session.user.id }).select("_id").lean()
+  if (!page) throw new Error("Page not found or unauthorized")
+
   const operations = parsed.data.blocks.map((b) => ({
     updateOne: {
-      filter: { _id: b._id },
+      filter: { _id: b._id, pageId: page._id },
       update: { $set: { order: b.order } },
     },
   }))
 
-  await Block.bulkWrite(operations)
-  revalidatePath("/dashboard")
+  if (operations.length > 0) await Block.bulkWrite(operations)
+  revalidateEditorAndPublicPage(session.user.username)
   return { success: true }
 }
 
@@ -155,26 +211,6 @@ export async function deleteBlock(blockId: string) {
 
   await getOwnedPage(block.pageId.toString(), userId)
   await Block.findByIdAndDelete(blockId)
-  revalidatePath("/dashboard")
-
-  revalidatePath("/dashboard")
+  revalidateEditorAndPublicPage(session.user.username)
   return { success: true }
-}
-
-export async function toggleBlockActive(blockId: string) {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error("Unauthorized")
-
-  const userId = session.user.id
-  await connectDB()
-
-  const block = await Block.findById(blockId)
-  if (!block) throw new Error("Block not found")
-
-  await getOwnedPage(block.pageId.toString(), userId)
-  block.isActive = !block.isActive
-  await block.save()
-
-  revalidatePath("/dashboard")
-  return { success: true, isActive: block.isActive }
 }

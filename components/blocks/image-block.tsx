@@ -6,6 +6,7 @@ export function ImageBlock({ data, theme, index = 0 }: BlockComponentProps) {
   return (
     <div className={`text-center ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
       <div className={`overflow-hidden ${getCardRadius(theme)} ${getShadowClass(theme)} relative group`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- owner-supplied remote image URL from any host */}
         <img
           src={data.src}
           alt={data.alt || "Image"}

@@ -1,5 +1,6 @@
 "use client"
 
+import { pageAddress } from "@/lib/site"
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -102,6 +103,7 @@ export function SettingsClient({
             <div className="relative group">
               <div className="w-20 h-20 rounded-full bg-dashboard-bg border border-dashboard-border overflow-hidden flex items-center justify-center text-display font-bold text-muted-foreground">
                 {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- owner-supplied avatar URL; its host is not guaranteed to be in next.config remotePatterns
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   (user.name || user.username || "U")[0].toUpperCase()
@@ -132,7 +134,7 @@ export function SettingsClient({
           </div>
           <div className="space-y-1.5">
             <label className="text-small text-muted-foreground">Username</label>
-            <Input value={`linknest.app/${user.username}`} disabled className={`${inputClass} opacity-50 font-mono`} />
+            <Input value={pageAddress(user.username)} disabled className={`${inputClass} opacity-50 font-mono`} />
           </div>
           <button type="submit" disabled={saving} className="h-10 rounded-xl bg-gold text-ink text-caption font-semibold px-5 hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2">
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

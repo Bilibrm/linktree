@@ -1,129 +1,65 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { logoutAction } from "@/lib/actions/auth"
-import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { PanelLeftClose, PanelLeft, ArrowUpRight, LogOut, Menu, Link2, Palette, BarChart3, Settings, Sun, Moon } from "lucide-react"
-import { useDashboardTheme } from "./theme-provider"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { BarChart3, LayoutPanelTop, Palette, Settings } from "lucide-react"
+import { Mark } from "@/components/brand/wordmark"
+import { cn } from "@/lib/utils"
 
 const navItems = [
-  { href: "/dashboard", label: "Links & Blocks", icon: Link2 },
-  { href: "/dashboard/appearance", label: "Appearance", icon: Palette },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard", label: "Page", icon: LayoutPanelTop },
+  { href: "/dashboard/appearance", label: "Look", icon: Palette },
+  { href: "/dashboard/analytics", label: "Stats", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
-export function DashboardSidebar({ username }: { username: string; pageId: string }) {
+/**
+ * Dashboard navigation (DESIGN_SYSTEM.md §8.3): a 64px rail on the left from 768px up,
+ * a bottom tab bar below that. The current tab is marked by a pink bar and heavier
+ * type as well as `aria-current`, never by color alone.
+ */
+export function DashboardNav() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const { dark, toggle } = useDashboardTheme()
-
-  const nav = (
-    <nav className="flex flex-col h-full">
-      <div className="px-4 pt-5 pb-6">
-        <Link href="/dashboard" className={`font-display font-black text-lg tracking-tight text-foreground ${collapsed ? "block text-center" : ""}`}>
-          {collapsed ? "LN" : "LinkNest"}
-        </Link>
-        {!collapsed && (
-          <a
-            href={`/${username}`}
-            target="_blank"
-            className="flex items-center gap-1 text-small text-muted-foreground hover:text-foreground mt-1.5 truncate transition-colors"
-          >
-            linknest.app/{username}
-            <ArrowUpRight className="w-3 h-3 flex-shrink-0" />
-          </a>
-        )}
-      </div>
-      <div className="flex-1 px-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 min-h-[44px] text-caption transition-all relative ${
-                isActive
-                  ? "text-gold font-semibold bg-gold/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
-              } ${collapsed ? "justify-center px-2" : ""}`}
-            >
-              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-gold" />}
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && item.label}
-            </Link>
-          )
-        })}
-      </div>
-      <div className="px-2 pb-4 space-y-1">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`flex items-center gap-3 rounded-lg px-3 min-h-[44px] text-caption text-muted-foreground hover:text-foreground hover:bg-sidebar-accent w-full transition-all ${collapsed ? "justify-center px-2" : ""}`}
-        >
-          {collapsed ? <PanelLeft className="w-4 h-4" /> : <><PanelLeftClose className="w-4 h-4" /> Collapse</>}
-        </button>
-        <button
-          onClick={toggle}
-          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-          className={`flex items-center gap-3 rounded-lg px-3 min-h-[44px] text-caption text-muted-foreground hover:text-foreground hover:bg-sidebar-accent w-full transition-all ${collapsed ? "justify-center px-2" : ""}`}
-        >
-          {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {!collapsed && (dark ? "Light mode" : "Dark mode")}
-        </button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowLogoutConfirm(true)}
-          className={`w-full min-h-[44px] text-caption text-muted-foreground hover:text-foreground hover:bg-sidebar-accent justify-start ${collapsed ? "px-0 justify-center" : ""}`}
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span className="ml-3">Log out</span>}
-        </Button>
-      </div>
-    </nav>
-  )
-
-  async function handleLogout() {
-    await logoutAction()
-  }
 
   return (
-    <>
-      <aside
-        className={`hidden md:flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ${collapsed ? "w-16" : "w-56"}`}
+    <nav
+      aria-label="Dashboard"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-rule bg-sheet pb-[env(safe-area-inset-bottom)] md:static md:z-auto md:w-16 md:shrink-0 md:flex-col md:border-t-0 md:border-r md:pb-0"
+    >
+      <Link
+        href="/dashboard"
+        aria-label="LinkNest, your page"
+        className="hidden h-14 items-center justify-center border-b border-rule md:flex"
       >
-        {nav}
-      </aside>
-      <ConfirmDialog
-        open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-        title="Log out"
-        description="Are you sure you want to log out? You'll need to sign in again to manage your page."
-        confirmLabel="Log out"
-        onConfirm={handleLogout}
-      />
-      <Sheet>
-        <SheetTrigger asChild className="md:hidden fixed z-50" style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)", left: "calc(env(safe-area-inset-left, 0px) + 0.75rem)" }}>
-          <Button variant="ghost" size="icon" aria-label="Open navigation menu" className="min-h-[44px] min-w-[44px] text-foreground">
-            <Menu className="w-4 h-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-          <ScrollArea className="h-full">{nav}</ScrollArea>
-        </SheetContent>
-      </Sheet>
-    </>
+        <Mark className="size-7" />
+      </Link>
+      <ul className="flex flex-1 md:flex-none md:flex-col md:py-2">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href
+          return (
+            <li key={href} className="flex-1 md:flex-none">
+              <Link
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "type-micro relative flex h-14 flex-col items-center justify-center gap-1 transition-colors duration-150 ease-press -outline-offset-2",
+                  active ? "font-extrabold text-ink" : "font-medium text-ink-soft hover:bg-tint hover:text-ink"
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute bg-pink transition-transform duration-200 ease-press inset-x-3 top-0 h-[3px] origin-center md:inset-x-auto md:inset-y-2.5 md:left-0 md:h-auto md:w-[3px]",
+                    active ? "scale-100" : "scale-0"
+                  )}
+                />
+                <Icon className="size-[18px]" strokeWidth={active ? 2.25 : 1.75} aria-hidden="true" />
+                {label}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
   )
 }

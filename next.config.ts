@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.pexels.com" },
     ],
   },
+  experimental: {
+    // Dashboard tab changes crossfade through React <ViewTransition> (DESIGN_SYSTEM.md §6.2).
+    viewTransition: true,
+  },
   typescript: {
     ignoreBuildErrors: false,
   },

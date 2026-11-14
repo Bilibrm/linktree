@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Wordmark />
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-10 pb-16 sm:px-8 sm:pt-16">
-        <div className="w-full max-w-[400px]">{children}</div>
+        {children}
       </main>
       <footer className="mx-auto w-full max-w-6xl px-5 pb-6 sm:px-8">
         <p className="type-small text-ink-soft">

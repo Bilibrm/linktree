@@ -10,6 +10,8 @@ import { usernameSchema } from "@/lib/validation"
 import { SITE_HOST, normalizeUsername } from "@/lib/site"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Proof } from "@/components/landing/proof"
+import { pickerBlocks, pressTheme } from "@/components/landing/sample-page"
 import { FieldError, FieldLabel, authInputClass } from "../field"
 
 type NameState =
@@ -33,6 +35,7 @@ const HELP = "Lowercase letters, numbers, hyphens and underscores. 3 to 30 chara
 export function SignupForm({ initialUsername = "" }: { initialUsername?: string }) {
   const router = useRouter()
   const [username, setUsername] = useState(initialUsername)
+  const [displayName, setDisplayName] = useState("")
   const [nameState, setNameState] = useState<NameState>(() => formatState(initialUsername))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -109,111 +112,132 @@ export function SignupForm({ initialUsername = "" }: { initialUsername?: string 
   const nameInvalid = shownState.kind === "invalid" || shownState.kind === "taken" || Boolean(fieldErrors.username)
 
   return (
-    <>
-      <h1 className="type-title-1">Claim your name</h1>
-      <p className="type-body mt-3 text-ink-soft">It becomes the address of your page. You can fill the page in after.</p>
+    <div className="lg:grid lg:grid-cols-[400px_1fr] lg:gap-16">
+      <div className="w-full max-w-[400px]">
+        <h1 className="type-title-1">Claim your name</h1>
+        <p className="type-body mt-3 text-ink-soft">It becomes the address of your page. You can fill the page in after.</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-        <div className="space-y-2">
-          <FieldLabel htmlFor="username">Name</FieldLabel>
-          <div
-            className={`flex h-14 items-center rounded-label border bg-sheet transition-colors duration-150 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-pink ${
-              nameInvalid ? "border-danger" : "border-ink"
-            }`}
-          >
-            <span className="tabular shrink-0 pl-3 text-[0.9375rem] text-ink-soft select-none" aria-hidden="true">
-              {SITE_HOST}/
-            </span>
-            <input
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              onBlur={() => setNameTouched(true)}
-              required
-              minLength={3}
-              maxLength={30}
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="yourname"
-              aria-invalid={nameInvalid ? true : undefined}
-              aria-describedby="username-status"
-              className="press-bare-input h-full min-w-0 flex-1 bg-transparent pr-3 text-[0.9375rem] font-semibold text-ink placeholder:font-normal placeholder:text-ink-soft"
-            />
-          </div>
-          <div id="username-status" aria-live="polite" className="min-h-[1.3rem]">
-            {fieldErrors.username ? (
-              <FieldError>{fieldErrors.username}</FieldError>
-            ) : (
-              <NameStatus state={shownState} username={username} />
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <FieldLabel htmlFor="name" hint="Optional">Display name</FieldLabel>
-          <Input id="name" name="name" maxLength={60} autoComplete="name" className={authInputClass} />
-        </div>
-
-        <div className="space-y-2">
-          <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            aria-invalid={fieldErrors.email ? true : undefined}
-            aria-describedby={fieldErrors.email ? "email-error" : undefined}
-            className={authInputClass}
-          />
-          {fieldErrors.email && <FieldError id="email-error">{fieldErrors.email}</FieldError>}
-        </div>
-
-        <div className="space-y-2">
-          <FieldLabel htmlFor="password" hint="8 characters or more">Password</FieldLabel>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPw ? "text" : "password"}
-              required
-              minLength={8}
-              autoComplete="new-password"
-              aria-invalid={fieldErrors.password ? true : undefined}
-              aria-describedby={fieldErrors.password ? "password-error" : undefined}
-              className={`${authInputClass} pr-12`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPw(!showPw)}
-              aria-label={showPw ? "Hide password" : "Show password"}
-              aria-pressed={showPw}
-              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ink-soft transition-colors duration-150 hover:text-ink"
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <div className="space-y-2">
+            <FieldLabel htmlFor="username">Name</FieldLabel>
+            <div
+              className={`flex h-14 items-center rounded-label border bg-sheet transition-colors duration-150 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-pink ${
+                nameInvalid ? "border-danger" : "border-ink"
+              }`}
             >
-              {showPw ? <EyeOff className="size-[18px]" strokeWidth={1.75} /> : <Eye className="size-[18px]" strokeWidth={1.75} />}
-            </button>
+              <span className="tabular shrink-0 pl-3 text-[0.9375rem] text-ink-soft select-none" aria-hidden="true">
+                {SITE_HOST}/
+              </span>
+              <input
+                id="username"
+                name="username"
+                value={username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                onBlur={() => setNameTouched(true)}
+                required
+                minLength={3}
+                maxLength={30}
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="yourname"
+                aria-invalid={nameInvalid ? true : undefined}
+                aria-describedby="username-status"
+                className="press-bare-input h-full min-w-0 flex-1 bg-transparent pr-3 text-[0.9375rem] font-semibold text-ink placeholder:font-normal placeholder:text-ink-soft"
+              />
+            </div>
+            <div id="username-status" aria-live="polite" className="min-h-[1.3rem]">
+              {fieldErrors.username ? (
+                <FieldError>{fieldErrors.username}</FieldError>
+              ) : (
+                <NameStatus state={shownState} username={username} />
+              )}
+            </div>
           </div>
-          {fieldErrors.password && <FieldError id="password-error">{fieldErrors.password}</FieldError>}
-        </div>
 
-        {error && <FieldError>{error}</FieldError>}
+          <div className="space-y-2">
+            <FieldLabel htmlFor="name" hint="Optional">Display name</FieldLabel>
+            <Input
+              id="name"
+              name="name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={60}
+              autoComplete="name"
+              className={authInputClass}
+            />
+          </div>
 
-        <Button type="submit" variant="pink" size="touch" disabled={loading} className="w-full">
-          {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
-          Create your page
-        </Button>
-      </form>
+          <div className="space-y-2">
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              aria-invalid={fieldErrors.email ? true : undefined}
+              aria-describedby={fieldErrors.email ? "email-error" : undefined}
+              className={authInputClass}
+            />
+            {fieldErrors.email && <FieldError id="email-error">{fieldErrors.email}</FieldError>}
+          </div>
 
-      <p className="type-body mt-8 text-ink-soft">
-        Already have a page?{" "}
-        <Link href="/auth/login" className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4">
-          Log in
-        </Link>
-      </p>
-    </>
+          <div className="space-y-2">
+            <FieldLabel htmlFor="password" hint="8 characters or more">Password</FieldLabel>
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPw ? "text" : "password"}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                aria-invalid={fieldErrors.password ? true : undefined}
+                aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                className={`${authInputClass} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                aria-label={showPw ? "Hide password" : "Show password"}
+                aria-pressed={showPw}
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ink-soft transition-colors duration-150 hover:text-ink"
+              >
+                {showPw ? <EyeOff className="size-[18px]" strokeWidth={1.75} /> : <Eye className="size-[18px]" strokeWidth={1.75} />}
+              </button>
+            </div>
+            {fieldErrors.password && <FieldError id="password-error">{fieldErrors.password}</FieldError>}
+          </div>
+
+          {error && <FieldError>{error}</FieldError>}
+
+          <Button type="submit" variant="pink" size="touch" disabled={loading} className="w-full">
+            {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
+            Create your page
+          </Button>
+        </form>
+
+        <p className="type-body mt-8 text-ink-soft">
+          Already have a page?{" "}
+          <Link href="/auth/login" className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4">
+            Log in
+          </Link>
+        </p>
+      </div>
+
+      {/* From 1024px up: the page header as it will read, live from the two name fields. */}
+      <aside className="hidden justify-center pt-2 lg:flex" aria-label="Preview of your page">
+        <Proof
+          blocks={pickerBlocks}
+          theme={pressTheme}
+          username={username || "yourname"}
+          name={displayName.trim() || username || "Your name"}
+          className="sticky top-8 self-start"
+        />
+      </aside>
+    </div>
   )
 }
 

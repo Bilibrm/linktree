@@ -97,6 +97,8 @@ export async function updateMyProfile(formData: FormData) {
   await connectDB()
   await User.findByIdAndUpdate(userId, parsed.data)
   revalidatePath("/dashboard")
+  // The public page shows the name and photo, and it is statically cached.
+  if (session.user.username) revalidatePath(`/${session.user.username}`)
   return { success: true }
 }
 
