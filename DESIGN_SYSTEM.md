@@ -69,7 +69,7 @@ this wider set of spot colors, always printed in **pairs** over paper, with over
 | Fluor pink | `#FF4FA3` | Federal blue | `#1C2A63` |
 | Sunflower | `#FFD23F` | Teal | `#00838A` |
 | Orange | `#FF6B2C` | Grass | `#18A558` |
-| Violet | `#6B4BD8` | Scarlet | `#E8352E` |
+| Sky | `#4FB3E8` | Scarlet | `#E8352E` |
 
 Each landing section **changes ink pair** as it scrolls in (hero pink+blue → blocks
 sunflower+blue → themes orange+teal → stats grass+pink → closing pink+blue), so the page
