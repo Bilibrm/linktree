@@ -33,6 +33,8 @@ export default async function SettingsPage() {
         bio: page.bio,
         seo: page.seo,
         isPublished: page.isPublished,
+        visibility: page.visibility || "public",
+        hasPassword: !!page.passwordHash,
       }}
     />
   )

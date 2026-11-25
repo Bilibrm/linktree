@@ -30,7 +30,7 @@ export default defineConfig({
     },
     {
       name: "public-tests",
-      testMatch: ["**/theming.spec.ts", "**/public-page.spec.ts"],
+      testMatch: ["**/theming.spec.ts", "**/public-page.spec.ts", "**/theme-migration.spec.ts"],
     },
   ],
 })

@@ -1,32 +1,42 @@
 import type { FlatBlockData } from "@/lib/validation"
+import type { ThemeV2 } from "@/lib/themes/types"
 
 export type BlockType = "link" | "header" | "text" | "divider" | "social" | "image" | "gallery" | "embed" | "form" | "countdown" | "button" | "spacer" | "video"
 
-export type ThemePreset = "minimal" | "dark" | "vibrant" | "nature" | "ocean" | "sunset" | "mono" | "bold"
-
+/**
+ * A page's theme as stored. Two generations share the document:
+ *
+ * - v2 (DESIGN_SYSTEM.md §8.9): `preset` holds the theme id and `v2` the recipe.
+ * - v1: `preset` is one of the eight old preset names and the flat fields below hold
+ *   the look. Nothing writes these any more; they stay typed because production
+ *   documents carry them and `resolveTheme` (lib/themes) reads them.
+ *
+ * Never render from this directly. Pass it through `resolveTheme`.
+ */
 export interface ThemeConfig {
-  preset: ThemePreset
+  preset: string
+  v2?: ThemeV2
+  customCSS?: string
   backgroundColor?: string
-  backgroundType?: "solid" | "gradient" | "image" | "animated"
+  backgroundType?: string
   backgroundValue?: string
   backgroundDirection?: string
   backgroundStops?: { color: string; position: number }[]
   font?: string
-  buttonStyle?: "sharp" | "rounded" | "pill"
+  buttonStyle?: string
   buttonColor?: string
   buttonTextColor?: string
   accentColor?: string
-  linkStyle?: "standard" | "card" | "minimal"
-  linkHover?: "lift" | "underline" | "fill" | "none"
-  socialIconStyle?: "outline" | "filled" | "minimal"
-  borderRadius?: "sharp" | "soft" | "rounded" | "pill"
-  shadow?: "none" | "subtle" | "medium" | "strong"
-  avatarShape?: "circle" | "rounded" | "square"
-  layoutWidth?: "narrow" | "normal" | "wide"
-  animation?: "none" | "fade" | "slide" | "scale"
+  linkStyle?: string
+  linkHover?: string
+  socialIconStyle?: string
+  borderRadius?: string
+  shadow?: string
+  avatarShape?: string
+  layoutWidth?: string
+  animation?: string
   backgroundBlur?: boolean
-  spacingDensity?: "compact" | "comfortable" | "spacious"
-  customCSS?: string
+  spacingDensity?: string
 }
 
 export interface BlockData {

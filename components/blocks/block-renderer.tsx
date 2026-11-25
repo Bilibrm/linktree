@@ -1,7 +1,4 @@
-"use client"
-
-import type { FlatBlockData } from "@/lib/validation"
-import type { IBlock, ThemeConfig } from "@/types"
+import type { IBlock } from "@/types"
 import { LinkBlock } from "./link-block"
 import { HeaderBlock } from "./header-block"
 import { TextBlock } from "./text-block"
@@ -10,21 +7,23 @@ import { SocialBlock } from "./social-block"
 import { ImageBlock } from "./image-block"
 import { GalleryBlock } from "./gallery-block"
 import { EmbedBlock } from "./embed-block"
-import { FormBlock as FormBlockComponent } from "./form-block"
+import { FormBlock } from "./form-block"
 import { CountdownBlock } from "./countdown-block"
 import { ButtonBlock } from "./button-block"
 import { SpacerBlock } from "./spacer-block"
 import { VideoBlock } from "./video-block"
+import type { BlockComponentProps } from "./block-props"
 
-export type BlockComponentProps = {
-  data: FlatBlockData
-  blockId?: string
-  pageId?: string
-  theme: ThemeConfig
-  index?: number
-}
+export type { BlockComponentProps } from "./block-props"
 
-const renderers: Record<string, React.FC<BlockComponentProps>> = {
+/**
+ * One block as visitors see it. There is no theme prop: every block draws from the page
+ * root's theme (`.lp` in app/themes.css), so the same markup serves the public page, the
+ * editor proof, the Look picker and the landing samples.
+ *
+ * Server-safe (no directive). Only the form, countdown and video are client components.
+ */
+const renderers: Record<string, React.ComponentType<BlockComponentProps>> = {
   link: LinkBlock,
   header: HeaderBlock,
   text: TextBlock,
@@ -33,34 +32,23 @@ const renderers: Record<string, React.FC<BlockComponentProps>> = {
   image: ImageBlock,
   gallery: GalleryBlock,
   embed: EmbedBlock,
-  form: FormBlockComponent,
+  form: FormBlock,
   countdown: CountdownBlock,
   button: ButtonBlock,
   spacer: SpacerBlock,
   video: VideoBlock,
 }
 
-const DEFAULT_THEME: ThemeConfig = { preset: "minimal" }
-
-export function BlockRenderer({
-  block,
-  theme,
-  index = 0,
-}: {
-  block: IBlock
-  theme?: ThemeConfig
-  index?: number
-}) {
+export function BlockRenderer({ block }: { block: IBlock }) {
   const Renderer = renderers[block.type]
   if (!Renderer) return null
+  return <Renderer data={block.data ?? {}} blockId={block._id} pageId={block.pageId} />
+}
 
-  return (
-    <Renderer
-      data={block.data}
-      blockId={block._id}
-      pageId={block.pageId}
-      theme={theme || DEFAULT_THEME}
-      index={index}
-    />
-  )
+/** Whether a block takes half a row where the layout has columns (grid, poster). */
+export function blockIsHalf(block: Pick<IBlock, "type" | "data">): boolean {
+  const data = (block.data ?? {}) as { featured?: boolean; fullWidth?: boolean }
+  if (block.type === "link") return !data.featured
+  if (block.type === "button") return !data.fullWidth
+  return false
 }

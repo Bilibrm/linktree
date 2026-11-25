@@ -11,8 +11,12 @@ import { SITE_HOST, normalizeUsername } from "@/lib/site"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Proof } from "@/components/landing/proof"
-import { pickerBlocks, pressTheme } from "@/components/landing/sample-page"
+import { pickerBlocks } from "@/components/landing/sample-page"
+import { DEFAULT_THEME, resolveThemeId } from "@/lib/themes"
 import { FieldError, FieldLabel, authInputClass } from "../field"
+
+/** New pages start on the default theme, so the preview shows that one. */
+const startTheme = resolveThemeId(DEFAULT_THEME)
 
 type NameState =
   | { kind: "empty" }
@@ -231,7 +235,7 @@ export function SignupForm({ initialUsername = "" }: { initialUsername?: string 
       <aside className="hidden justify-center pt-2 lg:flex" aria-label="Preview of your page">
         <Proof
           blocks={pickerBlocks}
-          theme={pressTheme}
+          theme={startTheme}
           username={username || "yourname"}
           name={displayName.trim() || username || "Your name"}
           className="sticky top-8 self-start"

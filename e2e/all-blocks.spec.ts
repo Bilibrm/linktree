@@ -140,38 +140,15 @@ test.describe("all blocks", () => {
     await waitForSaved(page)
 
     // --- ensure page is publicly accessible ---
-    await page.goto("/dashboard/appearance")
-    await expect(page.getByRole("heading", { name: /appearance/i })).toBeVisible({ timeout: 10000 })
-
-    const visibilityTab = page.getByRole("tab", { name: /visibility/i })
-    if (await visibilityTab.isVisible().catch(() => false)) {
-      await visibilityTab.click()
-      await page.waitForTimeout(300)
-      const combo = page.getByRole("tabpanel").getByRole("combobox").first()
-      if (await combo.isVisible().catch(() => false)) {
-        const currentVal = await combo.textContent().catch(() => "")
-        if (currentVal && !/public/i.test(currentVal)) {
-          await combo.click()
-          await page.getByRole("option", { name: /^public/i }).click()
-          await page.waitForTimeout(200)
-          await page.getByRole("button", { name: /save changes/i }).click()
-          await page.waitForTimeout(1500)
-        }
-      }
-    }
+    await page.goto("/dashboard/settings")
+    await page.getByLabel("Who can see it").selectOption("public")
+    await page.getByRole("button", { name: /save settings/i }).click()
+    await page.waitForTimeout(1500)
 
     // --- visit public page ---
     const publicUrl = `/${ui.username}`
     await page.goto(publicUrl)
     await page.waitForTimeout(2000)
-
-    // Handle password gate if still present
-    const pwInput = page.getByPlaceholder(/password|enter password/i).first()
-    if (await pwInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await pwInput.fill("secret123")
-      await page.getByRole("button", { name: /unlock|enter/i }).click()
-      await page.waitForTimeout(2000)
-    }
 
     // Screenshots
     await page.screenshot({ path: "e2e/public-page-full.png", fullPage: true })

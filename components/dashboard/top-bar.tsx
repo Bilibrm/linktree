@@ -98,7 +98,7 @@ export function DashboardTopBar({ username }: { username: string }) {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
-        {pathname === "/dashboard" && <SaveIndicator />}
+        {(pathname === "/dashboard" || pathname === "/dashboard/appearance") && <SaveIndicator />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="size-11 md:size-9" aria-label="Account menu">
@@ -121,7 +121,7 @@ export function DashboardTopBar({ username }: { username: string }) {
   )
 }
 
-/** "Saving…" / "Saved" / "Not saved — Retry", from the editor's real autosave. */
+/** "Saving…" / "Saved" / "Not saved — Retry", from the editor's and Look panel's real autosave. */
 function SaveIndicator() {
   const { status, retry } = useSaveState()
 

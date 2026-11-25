@@ -19,7 +19,7 @@ export function SettingsClient({
   page,
 }: {
   user: Pick<IUser, "email" | "username" | "name" | "avatarUrl" | "plan"> & { _id: string }
-  page: Pick<IPage, "title" | "bio" | "seo" | "isPublished"> & { _id: string }
+  page: Pick<IPage, "title" | "bio" | "seo" | "isPublished" | "visibility"> & { _id: string; hasPassword: boolean }
 }) {
   const router = useRouter()
   const [title, setTitle] = useState(page.title || "")
@@ -28,6 +28,8 @@ export function SettingsClient({
   const [seoTitle, setSeoTitle] = useState(page.seo?.title || "")
   const [seoDesc, setSeoDesc] = useState(page.seo?.description || "")
   const [isPublished, setIsPublished] = useState(page.isPublished)
+  const [visibility, setVisibility] = useState(page.visibility || "public")
+  const [pagePassword, setPagePassword] = useState("")
   const [saving, setSaving] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "")
   const [uploading, setUploading] = useState(false)
@@ -41,6 +43,13 @@ export function SettingsClient({
     formData.append("title", title)
     formData.append("bio", bio)
     formData.append("isPublished", String(isPublished))
+    if (visibility === "password" && !pagePassword && !page.hasPassword) {
+      toast.error("Set a password for visitors, or choose who can see the page.")
+      setSaving(false)
+      return
+    }
+    formData.append("visibility", visibility)
+    if (visibility === "password" && pagePassword) formData.append("password", pagePassword)
     formData.append("seo", JSON.stringify({ title: seoTitle, description: seoDesc }))
 
     const result = await updateMyPage(formData)
@@ -159,6 +168,27 @@ export function SettingsClient({
             <Switch id="published" checked={isPublished} onCheckedChange={setIsPublished} />
             <label htmlFor="published" className="text-caption text-dashboard-text">Page published</label>
           </div>
+          <div className="space-y-1.5">
+            <label htmlFor="visibility" className="text-small text-muted-foreground">Who can see it</label>
+            <select
+              id="visibility"
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value as typeof visibility)}
+              className={`${inputClass} h-11 w-full rounded-label border border-input px-3`}
+            >
+              <option value="public">Everyone, and search engines can list it</option>
+              <option value="unlisted">Anyone with the link, hidden from search</option>
+              <option value="password">Only people with a password</option>
+            </select>
+          </div>
+          {visibility === "password" && (
+            <div className="space-y-1.5">
+              <label htmlFor="page-password" className="text-small text-muted-foreground">
+                {page.hasPassword ? "New password (leave empty to keep the current one)" : "Password for visitors"}
+              </label>
+              <Input id="page-password" type="password" autoComplete="new-password" value={pagePassword} onChange={(e) => setPagePassword(e.target.value)} maxLength={128} className={inputClass} />
+            </div>
+          )}
           <div className="pt-4 border-t border-dashboard-border">
             <p className="text-caption font-semibold text-dashboard-text mb-3">SEO</p>
             <div className="space-y-3">

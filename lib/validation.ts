@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { AVATARS, BACKGROUNDS, BLOCK_STYLES, DENSITIES, ENTRANCES, HOVERS, LAYOUTS, SHAPES, WIDTHS } from "@/lib/themes/types"
 
 export const usernameSchema = z
   .string()
@@ -148,8 +149,58 @@ export const reorderBlocksSchema = z.object({
   ),
 })
 
+const hexColor = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+
+/**
+ * Theme system v2: a theme id plus only the layers the owner changed. Strict on write,
+ * because these values end up in CSS. `resolveTheme` validates again on read.
+ */
+export const themeV2Schema = z.object({
+  theme: z.string().max(40).optional(),
+  palette: z
+    .object({
+      background: hexColor.optional(),
+      surface: hexColor.optional(),
+      text: hexColor.optional(),
+      accent: hexColor.optional(),
+      accentText: hexColor.optional(),
+    })
+    .optional(),
+  font: z.string().max(40).optional(),
+  layout: z.enum(LAYOUTS).optional(),
+  width: z.enum(WIDTHS).optional(),
+  density: z.enum(DENSITIES).optional(),
+  avatar: z.enum(AVATARS).optional(),
+  blockStyle: z.enum(BLOCK_STYLES).optional(),
+  shape: z.enum(SHAPES).optional(),
+  background: z
+    .object({
+      kind: z.enum(BACKGROUNDS).optional(),
+      ink: hexColor.optional(),
+      image: z
+        .string()
+        .max(2000)
+        .regex(/^https:\/\/[^\s"'()\\<>]+$/i)
+        .optional(),
+    })
+    .optional(),
+  motion: z
+    .object({
+      entrance: z.enum(ENTRANCES).optional(),
+      hover: z.enum(HOVERS).optional(),
+    })
+    .optional(),
+})
+
+/** What the Look panel saves (lib/themes/edit.ts `draftToStored`). */
+export const themeSaveSchema = z.object({
+  v2: themeV2Schema,
+  customCSS: z.string().max(20000),
+})
+
 export const themeSchema = z.object({
-  preset: z.string(),
+  preset: z.string().max(40),
+  v2: themeV2Schema.optional(),
   backgroundColor: z.string().optional(),
   backgroundType: z.string().optional(),
   backgroundValue: z.string().optional(),
@@ -170,7 +221,7 @@ export const themeSchema = z.object({
   animation: z.string().optional(),
   backgroundBlur: z.boolean().optional(),
   spacingDensity: z.string().optional(),
-  customCSS: z.string().optional(),
+  customCSS: z.string().max(20000).optional(),
 })
 
 export const pageSettingsSchema = z.object({

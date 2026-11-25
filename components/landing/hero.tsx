@@ -3,10 +3,15 @@
 import { useRef, useState } from "react"
 import { ClaimForm } from "./claim-form"
 import { Proof } from "./proof"
-import { heroBlocks, plainTheme, pressTheme, samplePerson } from "./sample-page"
+import { resolveTheme, resolveThemeId } from "@/lib/themes"
+import { heroBlocks, samplePerson } from "./sample-page"
 import { usePressMotion } from "./use-press-motion"
 
 const HEADLINE = ["One page", "for all", "of it."]
+/** The page lands on plain stock, then takes its theme once. */
+// In the app's own Archivo, so the hero asks no third party for a font mid-animation.
+const plainTheme = resolveTheme({ preset: "monochrome", v2: { theme: "monochrome", font: "archivo" } })
+const pressTheme = resolveThemeId("riso")
 
 /**
  * The one bold thing on the landing page: the headline printed in two inks, and a page
@@ -78,7 +83,7 @@ export function Hero() {
         </div>
 
         <div data-compose="pending" className="flex justify-center lg:justify-end lg:pt-3">
-          <Proof blocks={heroBlocks} theme={theme} username={samplePerson.username} name={samplePerson.name} bio={samplePerson.bio} />
+          <Proof blocks={heroBlocks} theme={theme} username={samplePerson.username} name={samplePerson.name} bio={samplePerson.bio} compose />
         </div>
       </div>
     </section>

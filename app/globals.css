@@ -337,51 +337,6 @@
   }
 }
 
-/* Public-page block entrance animations, driven by ThemeConfig.animation */
-@keyframes theme-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes theme-slide-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes theme-scale-in {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
-}
-.theme-anim-fade {
-  animation: theme-fade-in 0.5s ease-out both;
-}
-.theme-anim-slide {
-  animation: theme-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.theme-anim-scale {
-  animation: theme-scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .theme-anim-fade, .theme-anim-slide, .theme-anim-scale {
-    animation: none !important;
-  }
-}
-
-/* Shared tinted surface used by non-featured links, forms, countdown, and embed
-   fallback cards. Each element sets its own --surface-hover-bg inline, so this
-   works regardless of ancestor context (real page, dashboard preview, or editor). */
-.theme-surface {
-  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
-}
-.theme-surface:hover {
-  background: var(--surface-hover-bg);
-}
-
-/* Animated gradient background keyframes (owner themes) */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* ── Custom scrollbars ── */
 ::-webkit-scrollbar {
   width: 6px;
@@ -403,40 +358,6 @@
 .overflow-x-auto::-webkit-scrollbar {
   width: 4px;
   height: 4px;
-}
-
-/* ── Public-page block decorations (owner themes) ── */
-
-.tile-shine {
-  position: relative;
-  isolation: isolate;
-}
-.tile-shine::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.14) 50%, transparent 60%);
-  background-size: 250% 250%;
-  background-position: -100% -100%;
-  transition: background-position 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 1;
-}
-.tile-shine:hover::after {
-  background-position: 100% 100%;
-}
-
-.avatar-ring {
-  background: conic-gradient(from 200deg, var(--page-accent), transparent 65%);
-}
-
-/* Themed form inputs on the public page — border/background come from inline
-   style (theme-tinted), focus color set per-element via --input-focus-border. */
-.themed-input {
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-.themed-input:focus {
-  border-color: var(--input-focus-border);
 }
 
 /* An input living inside a composite field (name-claim). The wrapper draws the focus ring. */

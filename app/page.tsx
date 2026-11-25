@@ -55,7 +55,7 @@ export default function Home() {
 
         <Section
           title="Make it yours"
-          lead="Your page should look like your work, not like ours. Try a preset on the sample page."
+          lead="Your page should look like your work, not like ours. Each theme is a different printed thing: a ticket stub, a zine, a blueprint, a Sunday paper. Pick one and the sample page reprints."
         >
           <ThemePicker />
         </Section>

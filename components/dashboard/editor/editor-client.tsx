@@ -7,6 +7,7 @@ import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import type { FlatBlockData } from "@/lib/validation"
 import type { BlockType, IBlock, ThemeConfig } from "@/types"
+import { resolveTheme } from "@/lib/themes"
 import { createBlock, deleteBlock, reorderBlocks, updateBlock } from "@/lib/actions/blocks"
 import { updateMyPage, updateMyProfile } from "@/lib/actions/page"
 import { uploadToCloudinary } from "@/lib/actions/upload"
@@ -463,8 +464,9 @@ export function EditorClient({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
-  // The editor answers actions with its own motion; the theme's entrance would replay on every insert.
-  const proofTheme = useMemo<ThemeConfig>(() => ({ ...(theme || { preset: "minimal" }), animation: "none" }), [theme])
+  // The proof stays still: the editor answers actions with its own motion, and the
+  // theme's entrance would replay on every insert.
+  const proofTheme = useMemo(() => resolveTheme(theme), [theme])
   const tabbableId = selectedBlock?._id ?? blocks[0]?._id
 
   const inspector = selectedBlock ? (
@@ -535,13 +537,13 @@ export function EditorClient({
                     />
                   </div>
                 )}
-                renderBlock={(block, index, content, spanClass) => (
+                renderBlock={(block, index, content, itemProps) => (
                   <ProofBlock
                     key={block._id}
                     block={block}
                     index={index}
                     total={blocks.length}
-                    spanClass={spanClass}
+                    spanClass={itemProps.className}
                     selected={selected === block._id}
                     tabbable={tabbableId === block._id}
                     fresh={freshId === block._id}

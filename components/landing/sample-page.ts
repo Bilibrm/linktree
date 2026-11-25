@@ -1,4 +1,5 @@
-import type { BlockType, IBlock, ThemeConfig } from "@/types"
+import type { BlockType, IBlock } from "@/types"
+import { resolveTheme } from "@/lib/themes"
 import type { FlatBlockData } from "@/lib/validation"
 
 /**
@@ -45,6 +46,13 @@ export const pickerBlocks: IBlock[] = [
   letter,
   social,
   block("book", "button", { label: "Book a workshop", url: "https://example.com/workshops", variant: "outline", fullWidth: true }),
+]
+
+/** Three short links: enough to show a theme's tiles in a thumbnail. */
+export const thumbBlocks: IBlock[] = [
+  block("t-shop", "link", { title: "Print shop", url: "https://example.com/shop", icon: "website", featured: true }),
+  block("t-zine", "link", { title: "Zine no. 4", url: "https://example.com/zine", icon: "medium" }),
+  block("t-letter", "link", { title: "Letter", url: "https://example.com/letter", icon: "email" }),
 ]
 
 /** One of each block worth showing, with the plain-words label that sits beside it. */
@@ -111,41 +119,8 @@ export const catalog: { label: string; note: string; blocks: IBlock[] }[] = [
   },
 ]
 
-const base: ThemeConfig = {
-  preset: "minimal",
-  backgroundType: "solid",
-  buttonStyle: "rounded",
-  linkStyle: "standard",
-  linkHover: "none",
-  socialIconStyle: "outline",
-  borderRadius: "soft",
-  shadow: "none",
-  avatarShape: "circle",
-  animation: "none",
-  spacingDensity: "comfortable",
-}
-
-/** Where every new page starts: plain black on white. */
-export const plainTheme: ThemeConfig = {
-  ...base,
-  backgroundColor: "#ffffff",
-  accentColor: "#000000",
-  buttonColor: "#000000",
-  buttonTextColor: "#ffffff",
-}
-
-/** The Press look: paper sheet and ink. Pink stays with the one real action on the screen. */
-export const pressTheme: ThemeConfig = {
-  ...base,
-  backgroundColor: "#F8F8F5",
-  accentColor: "#1C2A63",
-  buttonColor: "#1C2A63",
-  buttonTextColor: "#F8F8F5",
-  buttonStyle: "sharp",
-  borderRadius: "sharp",
-}
-
-export const pickerBaseTheme: ThemeConfig = base
+/** The look of the block catalog: Riso's paper and inks, without its halftone. */
+export const catalogTheme = resolveTheme({ preset: "riso", v2: { theme: "riso", background: { kind: "flat" } } })
 
 /** Thirty days of made-up traffic for the plot. Fixed numbers so server and client agree. */
 export const sampleTraffic: { day: string; views: number; taps: number }[] = [

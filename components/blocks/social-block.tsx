@@ -1,38 +1,25 @@
-import type { BlockComponentProps } from "./block-renderer"
-import { getSocialStyleClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
-import { PlatformIcon } from "./platform-icons"
+import { safeHref, type BlockComponentProps } from "./block-props"
+import { PLATFORMS, PlatformIcon } from "./platform-icons"
 
-export function SocialBlock({ data, theme, index = 0 }: BlockComponentProps) {
-  const links = data.links || []
-  const styleClass = getSocialStyleClass(theme)
-  const filled = (theme.socialIconStyle || "outline") === "filled"
-  const accent = theme.accentColor || "#16302A"
+function platformLabel(id: string): string {
+  return PLATFORMS.find((p) => p.id === id.toLowerCase())?.label ?? id
+}
 
+export function SocialBlock({ data }: BlockComponentProps) {
+  const links = ((data.links || []) as { platform?: string; url?: string }[]).flatMap((link) => {
+    const href = link && link.platform ? safeHref(link.url) : null
+    return href ? [{ platform: link.platform as string, href }] : []
+  })
+  if (links.length === 0) return null
   return (
-    <div className={`flex justify-center flex-wrap gap-2.5 ${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
-      {links.map((link: { platform: string; url: string }, i: number) => (
-        <a
-          key={i}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={link.platform}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95 ${styleClass}`}
-          style={{
-            transitionDelay: `${i * 30}ms`,
-            ...(filled
-              ? { backgroundColor: "var(--page-button-bg)", color: "var(--page-button-text)" }
-              : {
-                  background: `color-mix(in srgb, ${accent} 7%, transparent)`,
-                  borderColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
-                  color: "var(--page-accent)",
-                  opacity: (theme.socialIconStyle || "outline") === "minimal" ? 0.7 : 1,
-                }),
-          }}
-        >
-          <PlatformIcon platform={link.platform} className="w-[19px] h-[19px]" />
-        </a>
+    <ul className="lp-social">
+      {links.map((link, i) => (
+        <li key={i}>
+          <a href={link.href} target="_blank" rel="noopener noreferrer" className="lp-social-link" aria-label={platformLabel(link.platform)}>
+            <PlatformIcon platform={link.platform} className="size-5" />
+          </a>
+        </li>
       ))}
-    </div>
+    </ul>
   )
 }

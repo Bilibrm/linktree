@@ -1,16 +1,13 @@
-import type { BlockComponentProps } from "./block-renderer"
-import { getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
+import type { BlockComponentProps } from "./block-props"
 
-export function TextBlock({ data, theme, index = 0 }: BlockComponentProps) {
-  const align = data.align || "center"
+const ALIGN = new Set(["left", "center", "right"])
+
+export function TextBlock({ data }: BlockComponentProps) {
+  if (!data.content) return null
+  const align = ALIGN.has(data.align as string) ? (data.align as React.CSSProperties["textAlign"]) : undefined
   return (
-    <div className={`${getEntranceAnimClass(theme)}`} style={getEntranceDelayStyle(index)}>
-      <p
-        className="text-sm leading-relaxed whitespace-pre-wrap tracking-normal"
-        style={{ textAlign: align, color: "var(--page-accent)", opacity: 0.72 }}
-      >
-        {data.content || ""}
-      </p>
-    </div>
+    <p className="lp-text" style={align ? { textAlign: align } : undefined}>
+      {data.content}
+    </p>
   )
 }

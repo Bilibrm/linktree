@@ -3,6 +3,7 @@
 import { connectDB } from "@/lib/db/mongoose"
 import { User } from "@/lib/models/user"
 import { signupSchema, loginSchema, usernameSchema } from "@/lib/validation"
+import { DEFAULT_THEME } from "@/lib/themes/catalog"
 import bcrypt from "bcryptjs"
 import { signIn, signOut } from "@/lib/auth"
 import { AuthError } from "next-auth"
@@ -46,12 +47,8 @@ export async function signupAction(formData: FormData) {
     userId: user._id,
     title: name || username,
     bio: "",
-    theme: {
-      preset: "minimal",
-      backgroundType: "solid",
-      buttonStyle: "rounded",
-      linkStyle: "standard",
-    },
+    // New pages start on the default v2 theme (DESIGN_SYSTEM.md §8.8).
+    theme: { preset: DEFAULT_THEME, v2: { theme: DEFAULT_THEME } },
     isPublished: true,
   })
 

@@ -144,69 +144,66 @@ test.describe("Full user flow", () => {
     await page.waitForTimeout(1500)
   })
 
-  test("10. Appearance page - Change theme preset", async ({ page }) => {
+  test("10. Look - Pick a theme, and the public page prints in it", async ({ page }) => {
     await page.goto("/dashboard/appearance")
-    await expect(page.getByRole("heading", { name: /appearance/i })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("heading", { name: "Look", exact: true })).toBeVisible({ timeout: 15000 })
 
-    // Click the "Dark" preset button inside the presets tab panel
-    const presetPanel = page.locator('[role="tabpanel"]').first()
-    const darkBtn = presetPanel.getByRole("button", { name: /dark/i })
-    await expect(darkBtn).toBeVisible()
-    await darkBtn.click()
+    // Themes are radios drawn as tiny proofs; the proof restyles at once.
+    // The proof crossfades, so the radio is checked a frame after the click.
+    await page.getByRole("radio", { name: "Darkroom" }).click({ force: true })
+    await expect(page.getByRole("radio", { name: "Darkroom" })).toBeChecked()
+    await expect(page.locator(".lp").first()).toHaveAttribute("data-theme", "darkroom")
+    await page.waitForTimeout(800)
+    await expect(page.locator('[data-save-state="saved"]')).toBeVisible({ timeout: 10000 })
 
-    await page.getByRole("button", { name: /save changes/i }).click()
-    await page.waitForTimeout(1500)
+    // One layer changed on top of the theme, then put back.
+    await page.locator("summary", { hasText: "Layout" }).click()
+    await page.getByRole("radio", { name: /^Grid/ }).click({ force: true })
+    await expect(page.locator(".lp").first()).toHaveAttribute("data-layout", "grid")
+    await page.getByRole("button", { name: "Reset layout to the theme" }).click()
+    await expect(page.locator(".lp").first()).toHaveAttribute("data-layout", "editorial")
+    await page.waitForTimeout(800)
+    await expect(page.locator('[data-save-state="saved"]')).toBeVisible({ timeout: 10000 })
+
+    const ui = getUserInfo()
+    await page.goto(`/${ui.username}`)
+    await expect(page.locator(".lp").first()).toHaveAttribute("data-theme", "darkroom")
+    await expect(page.locator(".lp").first()).toHaveAttribute("data-layout", "editorial")
   })
 
-  test("11. Appearance page - Set password protection", async ({ page }) => {
-    await page.goto("/dashboard/appearance")
-
-    // Click Visibility tab
-    await page.getByRole("tab", { name: /visibility/i }).click()
-
-    // Open the select trigger
-    await page.getByRole("tabpanel").getByRole("combobox").first().click()
-
-    // Select password
-    await page.getByRole("option", { name: /password/i }).click()
-
-    // Fill password
-    await page.getByPlaceholder(/password/i).fill("secret123")
-
-    // Save
-    await page.getByRole("button", { name: /save changes/i }).click()
+  test("11. Settings - Protect the page with a password", async ({ page }) => {
+    await page.goto("/dashboard/settings")
+    await page.getByLabel("Who can see it").selectOption("password")
+    await page.getByLabel(/password for visitors|new password/i).fill("secret123")
+    await page.getByRole("button", { name: /save settings/i }).click()
     await page.waitForTimeout(1500)
   })
 
   test("12. Public page - Lock screen appears", async ({ page }) => {
     const ui = getUserInfo()
     const response = await page.goto(`/${ui.username}`)
-    // The page might 404 if not published — check status
     expect(response?.status()).toBeLessThan(400)
 
-    // Should see the lock screen
-    await expect(page.getByText(/this page is locked/i)).toBeVisible({ timeout: 15000 })
-    await expect(page.getByPlaceholder(/enter password/i)).toBeVisible()
+    await expect(page.getByRole("heading", { name: /page is locked/i })).toBeVisible({ timeout: 15000 })
+    await expect(page.getByLabel("Password")).toBeVisible()
   })
 
   test("13. Public page - Wrong password shows error", async ({ page }) => {
     const ui = getUserInfo()
     await page.goto(`/${ui.username}`)
 
-    // Type wrong password and submit
-    await page.getByPlaceholder(/enter password/i).fill("wrongpassword")
-    await page.getByRole("button", { name: /unlock/i }).click()
+    await page.getByLabel("Password").fill("wrongpassword")
+    await page.getByRole("button", { name: "Open the page" }).click()
 
-    await expect(page.getByText(/incorrect password/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/password is not right/i)).toBeVisible({ timeout: 10000 })
   })
 
   test("14. Public page - Correct password unlocks and shows the edited blocks", async ({ page }) => {
     const ui = getUserInfo()
     await page.goto(`/${ui.username}`)
 
-    // Type correct password and submit
-    await page.getByPlaceholder(/enter password/i).fill("secret123")
-    await page.getByRole("button", { name: /unlock/i }).click()
+    await page.getByLabel("Password").fill("secret123")
+    await page.getByRole("button", { name: "Open the page" }).click()
 
     await expect(page.getByRole("heading", { name: ui.name })).toBeVisible({ timeout: 10000 })
     // What the editor saved is what visitors get, in the order it was left.

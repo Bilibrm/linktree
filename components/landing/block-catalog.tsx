@@ -1,13 +1,12 @@
 "use client"
 
-import { BlockRenderer } from "@/components/blocks/block-renderer"
-import { getBlockSpanClass, themeToCSSVars } from "@/lib/theme-utils"
+import { ThemedPage } from "@/components/page/themed-page"
 import { cn } from "@/lib/utils"
-import { catalog, pressTheme } from "./sample-page"
+import { catalog, catalogTheme } from "./sample-page"
 
 /**
  * "What you can put on it": one long proof sheet of real blocks, each named in the margin.
- * The blocks come from `BlockRenderer`, the same as on a public page; they are samples, so
+ * The blocks come from `ThemedPage`, the same as on a public page; they are samples, so
  * the sheet is `inert`.
  */
 export function BlockCatalog() {
@@ -26,19 +25,12 @@ export function BlockCatalog() {
           <div
             inert
             className={cn(
-              "border-x border-ink bg-sheet px-5 py-6",
+              "overflow-hidden border-x border-ink",
               i === 0 ? "rounded-t-panel border-t" : "border-t border-t-rule",
               i === catalog.length - 1 && "rounded-b-panel border-b",
             )}
-            style={{ ...themeToCSSVars(pressTheme), fontFamily: "var(--page-font-family)" }}
           >
-            <div className="grid grid-cols-2 gap-3">
-              {entry.blocks.map((block, j) => (
-                <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
-                  <BlockRenderer block={block} theme={pressTheme} index={j} />
-                </div>
-              ))}
-            </div>
+            <ThemedPage bare theme={catalogTheme} header={{ name: "" }} blocks={entry.blocks} className="px-5 py-6" />
           </div>
         </li>
       ))}

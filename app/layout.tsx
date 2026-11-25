@@ -2,6 +2,7 @@ import { SITE_URL } from "@/lib/site"
 import type { Metadata, Viewport } from "next"
 import { Archivo } from "next/font/google"
 import "./globals.css"
+import "./themes.css"
 import { Toaster } from "@/components/ui/sonner"
 
 export const viewport: Viewport = {

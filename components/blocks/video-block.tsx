@@ -1,71 +1,45 @@
 "use client"
 
 import { useRef, useState } from "react"
-import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
-import { Play, Pause } from "lucide-react"
+import { Pause, Play } from "lucide-react"
+import type { BlockComponentProps } from "./block-props"
 
-export function VideoBlock({ data, theme, index = 0 }: BlockComponentProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [paused, setPaused] = useState(true)
-
+/**
+ * Client island: a facade. Nothing but the poster loads until the visitor presses play,
+ * unless the owner chose autoplay.
+ */
+export function VideoBlock({ data }: BlockComponentProps) {
+  const ref = useRef<HTMLVideoElement>(null)
+  const [playing, setPlaying] = useState(false)
   if (!data.src) return null
 
-  const radius = getCardRadius(theme)
-  const shadow = getShadowClass(theme)
-  const anim = getEntranceAnimClass(theme)
-  const delayStyle = getEntranceDelayStyle(index)
-
-  function togglePlay() {
-    if (!videoRef.current) return
-    if (videoRef.current.paused) {
-      videoRef.current.play()
-      setPaused(false)
-    } else {
-      videoRef.current.pause()
-      setPaused(true)
-    }
+  function toggle() {
+    const video = ref.current
+    if (!video) return
+    if (video.paused) void video.play().catch(() => setPlaying(false))
+    else video.pause()
   }
 
   return (
-    <div className={`${anim} relative group`} style={delayStyle}>
-      <div className={`overflow-hidden ${radius} ${shadow} relative`}>
+    <figure className="lp-figure">
+      <div className="lp-video">
         <video
-          ref={videoRef}
+          ref={ref}
           src={data.src}
-          poster={data.poster}
+          poster={data.poster || undefined}
+          preload={data.autoplay ? "auto" : data.poster ? "none" : "metadata"}
           autoPlay={data.autoplay}
           loop={data.loop}
-          muted={data.muted}
+          muted={data.muted || data.autoplay}
           playsInline
-          className="w-full object-cover max-h-96"
-          onClick={togglePlay}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
         />
-        <div className="absolute inset-0 ring-1 ring-inset ring-black/[0.06] rounded-inherit pointer-events-none" />
-        {paused && (
-          <button
-            onClick={togglePlay}
-            aria-label="Play video"
-            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg backdrop-blur-sm">
-              <Play className="w-5 h-5 text-on-pink ml-0.5" />
-            </div>
-          </button>
-        )}
-        {!paused && (
-          <button
-            onClick={togglePlay}
-            aria-label="Pause video"
-            className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
-          >
-            <Pause className="w-3.5 h-3.5 text-white" />
-          </button>
-        )}
+        <button type="button" className="lp-play" data-state={playing ? "playing" : "paused"} onClick={toggle} aria-label={playing ? "Pause video" : "Play video"}>
+          <span>{playing ? <Pause className="size-5" aria-hidden="true" /> : <Play className="ml-0.5 size-6" aria-hidden="true" />}</span>
+        </button>
       </div>
-      {data.caption && (
-        <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--page-accent)", opacity: 0.55 }}>{data.caption}</p>
-      )}
-    </div>
+      {data.caption && <figcaption className="lp-caption">{data.caption}</figcaption>}
+    </figure>
   )
 }

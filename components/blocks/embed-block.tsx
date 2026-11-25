@@ -1,60 +1,30 @@
-import type { BlockComponentProps } from "./block-renderer"
-import { getCardRadius, getShadowClass, getHoverClass, getSurfaceStyle, getEntranceAnimClass, getEntranceDelayStyle } from "@/lib/theme-utils"
-import { ExternalLink } from "lucide-react"
+import { safeHref, type BlockComponentProps } from "./block-props"
 
-export function EmbedBlock({ data, theme, index = 0 }: BlockComponentProps) {
-  const url = data.url || ""
+/** The players LinkNest embeds. Anything else shows as a plain link tile. */
+function embedFor(url: string): { src: string; title: string } | null {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{6,})/)
+  if (yt) return { src: `https://www.youtube-nocookie.com/embed/${yt[1]}`, title: "YouTube video" }
+  const sp = url.match(/open\.spotify\.com\/(track|episode|playlist|album|show)\/([a-zA-Z0-9]+)/)
+  if (sp) return { src: `https://open.spotify.com/embed/${sp[1]}/${sp[2]}`, title: "Spotify player" }
+  return null
+}
 
+export function EmbedBlock({ data }: BlockComponentProps) {
+  const url = safeHref(data.url)
   if (!url) return null
-
-  const getEmbedUrl = (url: string) => {
-    if (url.includes("youtube.com/watch") || url.includes("youtu.be")) {
-      const id = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/)?.[1]
-      if (id) return { src: `https://www.youtube.com/embed/${id}`, title: "YouTube" }
-    }
-    if (url.includes("open.spotify.com")) {
-      const id = url.match(/spotify\.com\/(track|episode|playlist)\/([a-zA-Z0-9]+)/)?.[0]
-      if (id) return { src: `https://open.spotify.com/embed/${id}`, title: "Spotify" }
-    }
-    return null
-  }
-
-  const embed = getEmbedUrl(url)
-  const radius = getCardRadius(theme)
-  const shadow = getShadowClass(theme)
-  const anim = getEntranceAnimClass(theme)
-  const delayStyle = getEntranceDelayStyle(index)
-  const accent = theme.accentColor || "#16302A"
+  const embed = embedFor(url)
 
   if (embed) {
     return (
-      <div
-        className={`p-1 ${radius} ${shadow} ${anim}`}
-        style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, ...delayStyle }}
-      >
-        <div className={`aspect-video overflow-hidden ${radius}`}>
-          <iframe
-            src={embed.src}
-            title={embed.title}
-            className="w-full h-full"
-            allowFullScreen
-            loading="lazy"
-          />
-        </div>
+      <div className="lp-embed">
+        <iframe src={embed.src} title={embed.title} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen />
       </div>
     )
   }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ ...getSurfaceStyle(theme), color: "var(--page-accent)", ...delayStyle }}
-      className={`group flex items-center justify-between w-full ${radius} border theme-surface px-4 py-3.5 text-sm font-medium ${getHoverClass(theme)} ${anim}`}
-    >
-      <span className="truncate">{url.replace(/^https?:\/\//, "").slice(0, 40)}</span>
-      <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-70 transition-opacity ml-2" />
+    <a href={url} target="_blank" rel="noopener noreferrer" className="lp-tile">
+      <span className="lp-tile-label">{url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
     </a>
   )
 }
