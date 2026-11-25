@@ -71,11 +71,10 @@ this wider set of spot colors, always printed in **pairs** over paper, with over
 | Orange | `#FF6B2C` | Grass | `#18A558` |
 | Sky | `#4FB3E8` | Scarlet | `#E8352E` |
 
-Each landing section **changes ink pair** as it scrolls in (hero pink+blue → blocks
-sunflower+blue → themes orange+teal → stats grass+pink → closing pink+blue), so the page
-feels like successive print runs. The paper color can shift slightly per section too
-(a dark "darkroom" section is allowed once). The app (dashboard/editor) stays on
-paper + ink + pink.
+**Where the drawer is used (revised, gallery-minimal brief):** the full drawer belongs to
+the **owner themes**. The LinkNest marketing site and app stay on paper + ink with pink as
+a sparse accent; the other inks appear on the landing only *inside* the theme proofs and
+showcase frames, never as section backgrounds. No section-by-section ink crossfades.
 
 Rules:
 - Never pure-grey UI chrome. Neutrals are tints of ink on paper.
@@ -120,29 +119,41 @@ Rules:
 
 ## 6. Motion
 
-The owner asked for a **creative, richly animated, very smooth** product. Motion is a
-headline feature on the landing page and in public-page themes, and a quiet, precise
-helper in the editor. All motion follows one metaphor: **paper moving through a press**
-(sheets slide in, inks register into place, layers separate and re-align).
+**Revised brief (owner, latest):** keep all content, pages and functionality; raise visual
+craft toward minimalist gallery / studio-template sites (Minimal Gallery, One Page Love,
+Nightshelf / Melune / Moorline): generous whitespace, crisp type hierarchy, hairline
+dividers, room to breathe. Motion is **smooth, tactile, weighted, never flashy**.
+The print metaphor stays as quiet character (paper, ink, one accent, a faint 2–3px
+misregistration on the hero headline), not as spectacle.
 
 ### 6.1 Landing — scroll choreography (GSAP + ScrollTrigger + Lenis)
 
-- **Lenis** smooth scroll on `/` only, synced to GSAP's ticker (one clock). Disabled under
-  reduced motion and on touch devices if it hurts native momentum.
-- **Hero:** on load, the two headline inks slide in from opposite sides and "register"
-  (misregistration offset eases to its final 4–6px); the proof assembles block by block.
-  On scroll, hero layers **parallax** at different depths (headline, proof, halftone
-  shapes) and the inks separate further as you leave.
-- **Blocks section:** **pinned** while each block type prints into the proof one at a
-  time, its label highlighted on the left (scrubbed to scroll).
-- **Themes section:** a **horizontal slide** track (pinned, scroll → x) of full theme
-  proofs, each in its own ink pair; the background paper/ink changes with the active theme.
-- **Stats section:** chart lines draw on (stroke-dashoffset scrubbed), counters roll.
-- **Closing:** big type sweeps in like a sheet feeding through rollers.
-- Section ink pairs crossfade per §3.1 as each section enters.
-- Decorative assets: generated SVG halftone shapes, riso blobs, registration marks,
-  paper grain. Real photos only if licensed (Unsplash-style CC0) and printed through a
-  duotone ink filter so they belong to the system.
+- **Weighted smooth scroll:** Lenis on `/` only (lerp ≈ 0.08–0.1), synced to GSAP's ticker.
+  Off under reduced motion; native on touch.
+- **Hero depth:** on load, headline lines rise in once with a soft stagger (clip mask, no
+  bounce); as you scroll past the fold the hero content scales to ~0.96 and drifts up/fades
+  slightly; the proof frame moves at a slower rate than the text.
+- **Image parallax:** every showcase visual (proofs, theme frames, print images) sits in a
+  clean clipped frame (`overflow: hidden`, hairline border); the inner image is ~110–115%
+  tall and translates −5% → +5% across the frame's travel. Text never parallaxes.
+- **Sticky split-screen:** "What you can put on it" and "Make it yours" are split
+  sections: the title + short narrative stays pinned on the left (CSS `position: sticky`
+  preferred over GSAP pins) while block cards / theme frames glide past on the right.
+  The active item's label in the narrative updates as its card passes centre.
+- **Soft reveals:** headings (line by line), hairline dividers (scaleX 0 → 1 from left),
+  and grid items ease in once in sequence (opacity + 12–16px rise, 600–800ms,
+  `cubic-bezier(0.22, 1, 0.36, 1)`, 60–80ms stagger) when their section reaches ~80% of
+  the viewport. Not on every paragraph; never re-hidden on scroll up.
+- **Stats:** the line chart draws on once; numbers count up once.
+- **Hover:** understated and crisp: links draw an underline from the left; buttons shift
+  1px and darken; cards lift 2px with the hairline darkening; images inside frames
+  scale 1.02. 150–220ms.
+- No horizontal scroll-jacked tracks, no section color crossfades, no ink separation
+  effects, no looping ambient motion on the marketing site.
+- Decorative assets: minimal. Prefer real showcase material (theme proofs, print images,
+  CC0 photography of makers/creators run through a subtle ink duotone) in clipped frames.
+- Layout: landing spacing scale 32 / 64 / 128 / 192; max text measure ~60ch; hairline
+  (1px ink at 12–16%) section dividers; one idea per screen.
 - Performance: animate only `transform`/`opacity`/`clip-path`; `will-change` scoped;
   `gsap.matchMedia()` for desktop vs mobile variants (mobile: lighter, no pins that trap
   scroll on short screens); everything inside `gsap.context()` and reverted on unmount.
