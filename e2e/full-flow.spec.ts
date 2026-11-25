@@ -188,6 +188,30 @@ test.describe("Full user flow", () => {
     await expect(page.getByLabel("Password")).toBeVisible()
   })
 
+  test("12b. Public page - A locked page sends no block data", async ({ browser, baseURL }) => {
+    const ui = getUserInfo()
+    // A stranger: no session, no unlock cookie.
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const leaks = ["Welcome Section", "Edited Link Title", "example.com"]
+
+    const html = await (await context.request.get(`${baseURL}/${ui.username}`)).text()
+    expect(html).toContain("page is locked")
+    for (const text of leaks) expect(html, `HTML leaks ${text}`).not.toContain(text)
+
+    // The flight payload a client navigation would fetch.
+    const flight = await (await context.request.get(`${baseURL}/${ui.username}`, { headers: { RSC: "1" } })).text()
+    for (const text of leaks) expect(flight, `RSC payload leaks ${text}`).not.toContain(text)
+
+    // And the live DOM once the lock screen has hydrated and asked about a cookie.
+    const page = await context.newPage()
+    await page.goto(`/${ui.username}`)
+    await expect(page.getByRole("heading", { name: /page is locked/i })).toBeVisible({ timeout: 15000 })
+    await page.waitForLoadState("networkidle")
+    const dom = await page.content()
+    for (const text of leaks) expect(dom, `DOM leaks ${text}`).not.toContain(text)
+    await context.close()
+  })
+
   test("13. Public page - Wrong password shows error", async ({ page }) => {
     const ui = getUserInfo()
     await page.goto(`/${ui.username}`)
@@ -209,5 +233,61 @@ test.describe("Full user flow", () => {
     // What the editor saved is what visitors get, in the order it was left.
     await expect(page.getByText("Welcome Section")).toBeVisible()
     await expect(page.getByRole("link", { name: /Edited Link Title/ })).toBeVisible()
+
+    // The unlock cookie keeps this visitor in on reload, and is httpOnly.
+    const unlock = (await page.context().cookies()).find((c) => c.name.startsWith("ln_unlock_"))
+    expect(unlock?.httpOnly).toBe(true)
+    await page.reload()
+    await expect(page.getByRole("link", { name: /Edited Link Title/ })).toBeVisible({ timeout: 10000 })
+  })
+
+  test("14b. Public page - A forged unlock cookie opens nothing", async ({ browser, baseURL }) => {
+    const ui = getUserInfo()
+    // Get a real cookie, then tamper with its signature.
+    const real = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const first = await real.newPage()
+    await first.goto(`/${ui.username}`)
+    await first.getByLabel("Password").fill("secret123")
+    await first.getByRole("button", { name: "Open the page" }).click()
+    await expect(first.getByRole("link", { name: /Edited Link Title/ })).toBeVisible({ timeout: 10000 })
+    const cookie = (await real.cookies()).find((c) => c.name.startsWith("ln_unlock_"))!
+    await real.close()
+
+    const [expires, signature] = cookie.value.split(".")
+    const forged = `${expires}.${signature.slice(0, -2)}${signature.endsWith("AA") ? "BB" : "AA"}`
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    await context.addCookies([{ ...cookie, value: forged, domain: new URL(baseURL!).hostname }])
+    const page = await context.newPage()
+    await page.goto(`/${ui.username}`)
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: /page is locked/i })).toBeVisible()
+    expect(await page.content()).not.toContain("Edited Link Title")
+    await context.close()
+  })
+
+  test("15. Settings - Delete an account after typing its username", async ({ browser, baseURL }) => {
+    // A throwaway account, so the shared one stays for the other specs.
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, baseURL })
+    const page = await context.newPage()
+    const username = `gone-${Date.now()}`
+    await page.goto("/auth/signup")
+    await page.fill("#username", username)
+    await page.waitForTimeout(600)
+    await page.fill("#name", "Gone Soon")
+    await page.fill("#email", `${username}@example.com`)
+    await page.fill("#password", "TestPass123!")
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard", { timeout: 20000 })
+
+    await page.goto("/dashboard/settings")
+    const remove = page.getByRole("button", { name: "Delete my account" })
+    await expect(remove).toBeDisabled()
+    await page.getByLabel(`Type ${username} to confirm`).fill(username)
+    await remove.click()
+    await page.waitForURL((url) => url.pathname === "/", { timeout: 20000 })
+
+    const gone = await context.request.get(`/${username}`)
+    expect(gone.status()).toBe(404)
+    await context.close()
   })
 })

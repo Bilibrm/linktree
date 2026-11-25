@@ -45,6 +45,15 @@ export type ThemedPageProps = {
 export type ItemProps = { className: string; style: React.CSSProperties }
 
 /**
+ * Stable class hooks for owners' custom CSS (listed in the Look panel's Advanced group).
+ * The `lp-*` classes are internal and may change; these will not.
+ *
+ * `.ln-page` (root), `.ln-header`, `.ln-avatar`, `.ln-name`, `.ln-title`, `.ln-bio`,
+ * `.ln-block` and `.ln-block--<type>` on each block, `.ln-link` on link tiles,
+ * `.ln-footer`.
+ */
+
+/**
  * An owner's page drawn in their theme (DESIGN_SYSTEM.md §8.8, §8.9). Directive-free and
  * hook-free, so it renders on the server for `/[username]` and inside client components
  * for the editor proof, the Look panel and the landing page. Every theme layer is CSS in
@@ -75,8 +84,8 @@ export function ThemedPage({
   const initial = header.name.trim().charAt(0) || "?"
 
   const head = (
-    <div className="lp-head" style={{ "--i": 0 } as React.CSSProperties} {...compose}>
-      <div className="lp-avatar" aria-hidden={header.avatarUrl ? undefined : true}>
+    <div className="lp-head ln-header" style={{ "--i": 0 } as React.CSSProperties} {...compose}>
+      <div className="lp-avatar ln-avatar" aria-hidden={header.avatarUrl ? undefined : true}>
         {header.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- owner-supplied avatar from any host
           <img src={header.avatarUrl} alt={header.name} width={128} height={128} decoding="async" />
@@ -85,16 +94,16 @@ export function ThemedPage({
         )}
       </div>
       <div className="lp-id">
-        <NameTag className="lp-name">{header.name}</NameTag>
-        {header.title && header.title !== header.name && <p className="lp-tagline">{header.title}</p>}
-        {header.bio && <p className="lp-bio">{header.bio}</p>}
+        <NameTag className="lp-name ln-name">{header.name}</NameTag>
+        {header.title && header.title !== header.name && <p className="lp-tagline ln-title">{header.title}</p>}
+        {header.bio && <p className="lp-bio ln-bio">{header.bio}</p>}
       </div>
     </div>
   )
 
   const items = blocks.map((block, index) => {
     const itemProps: ItemProps = {
-      className: cn("lp-item", blockIsHalf(block) ? "lp-half" : "lp-full"),
+      className: cn("lp-item ln-block", `ln-block--${block.type}`, blockIsHalf(block) ? "lp-half" : "lp-full"),
       style: { "--i": Math.min(index + 1, 14) } as React.CSSProperties,
     }
     const content = <BlockRenderer block={block} />
@@ -121,7 +130,7 @@ export function ThemedPage({
       {...root.attrs}
       data-still={still ? "" : undefined}
       data-ambient={ambient ? undefined : "off"}
-      className={cn("lp", page && "lp-page", className)}
+      className={cn("lp ln-page", page && "lp-page", className)}
       style={{ ...root.style, "--lp-name-len": String(nameFitLength(header.name)), ...style } as React.CSSProperties}
     >
       <div className="lp-bg" aria-hidden="true">
@@ -156,7 +165,7 @@ export function ThemedPage({
 /** The small credit under every public page (§8.8). */
 export function MadeWithLinkNest() {
   return (
-    <footer className="lp-foot">
+    <footer className="lp-foot ln-footer">
       <Link href="/" prefetch={false}>
         Made with LinkNest
       </Link>

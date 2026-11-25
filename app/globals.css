@@ -83,10 +83,6 @@
   --chart-5: var(--overprint);
   --radius: 0.5rem;
 
-  --dashboard-bg: var(--paper);
-  --dashboard-surface: var(--sheet);
-  --dashboard-text: var(--ink);
-  --dashboard-border: var(--rule);
 }
 .dark {
   --scrim: color-mix(in srgb, #05081A 60%, transparent);
@@ -125,10 +121,6 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-dashboard-bg: var(--dashboard-bg);
-  --color-dashboard-surface: var(--dashboard-surface);
-  --color-dashboard-text: var(--dashboard-text);
-  --color-dashboard-border: var(--dashboard-border);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -159,24 +151,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-
-  /* ── v1 compatibility. The shell and editor no longer use any of this; what is left is
-        still referenced by the Look, Stats and Settings screens (appearance-client,
-        analytics-client, settings-client) and the public lock screen, which slice 3
-        rewrites. Delete each line once nothing references it. ── */
-  --color-gold: var(--pink-ink);
-  --color-coral: var(--danger);
-  --color-bone: var(--ink);
-  --text-display: 2rem;
-  --text-display--line-height: 1.1;
-  --text-display--font-weight: 700;
-  --text-heading: 1.25rem;
-  --text-heading--line-height: 1.3;
-  --text-heading--font-weight: 600;
-  --text-caption: 0.875rem;
-  --text-caption--line-height: 1.45;
-  --text-small: 0.75rem;
-  --text-small--line-height: 1.4;
 }
 
 /* §4 type scale. Named type-* so they never collide with Tailwind's text-* colors or
@@ -247,20 +221,6 @@
   }
 }
 
-/* v1 compatibility (Look, Stats, Settings until slice 3): gold was both a text color and a fill. As text and tint it maps to
-   the text-safe pink; as a solid fill it is the pink ink with dark text. Unlayered so
-   these win over the generated utilities. */
-.bg-gold {
-  background-color: var(--pink);
-  color: var(--on-pink);
-}
-.hover\:bg-gold\/90:hover {
-  background-color: color-mix(in srgb, var(--pink) 86%, var(--on-pink));
-}
-.font-mono {
-  font-variant-numeric: tabular-nums;
-}
-
 /* §9 visible focus on every interactive element. Unlayered on purpose: it has to win over
    the `outline-none` utilities inside the shared primitives. */
 :where(a, button, input, textarea, select, summary, [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="combobox"], [tabindex]):focus-visible {
@@ -277,6 +237,7 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -291,7 +252,127 @@
   font-family: var(--font-body) !important;
 }
 
-/* ── Landing hero: two-ink overprint headline ── */
+/* ── Landing (DESIGN_SYSTEM.md §6.1): gallery-minimal, paper + ink, hairlines, pink sparse.
+      Spacing 32 / 64 / 128 / 192. Nothing here hides content: start states for scroll
+      reveals are set by components/landing/landing-motion.tsx, so without scripts or with
+      reduced motion the page is complete. ── */
+@utility landing-wrap {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: 1.25rem;
+  @media (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+}
+.landing-section {
+  padding-block: 4rem 4rem;
+}
+@media (width >= 64rem) {
+  .landing-section {
+    padding-block: 8rem 8rem;
+  }
+}
+/* The sticky narrative column of a split section (§6.1). Sticky only where the whole
+   column fits on screen; on shorter windows it scrolls like any column. */
+@media (width >= 64rem) and (height >= 800px) {
+  .landing-sticky {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+  }
+}
+@media (width >= 64rem) and (height >= 920px) {
+  .landing-sticky {
+    top: 8rem;
+  }
+}
+
+/* A section divider: 1px ink at 14%, drawn from the left by the reveal. */
+.landing-rule {
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+/* Links draw an underline from the left. */
+.landing-link {
+  background: linear-gradient(currentColor, currentColor) 0 calc(100% - 0.6rem) / 0 1px no-repeat;
+  transition: background-size 200ms var(--ease-press);
+}
+.landing-link:hover {
+  background-size: 100% 1px;
+}
+
+/* The sticky index beside the block cards: the card in the middle gets the mark. */
+.landing-index {
+  transition: color 200ms var(--ease-press);
+}
+.landing-index-mark {
+  width: 1.5rem;
+  height: 2px;
+  background: var(--ink);
+  transform: scaleX(0.35);
+  transform-origin: 0 50%;
+  opacity: 0.35;
+  transition: transform 220ms var(--ease-press), opacity 220ms var(--ease-press), background-color 220ms var(--ease-press);
+}
+.landing-index:hover .landing-index-mark {
+  opacity: 0.7;
+}
+.landing-index[aria-current] .landing-index-mark {
+  transform: none;
+  opacity: 1;
+  background: var(--pink);
+}
+
+/* Hairline card and frame. Hover: the hairline darkens; frames scale their print 1.02. */
+.landing-card {
+  overflow: hidden;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-panel);
+  background: var(--sheet);
+  transition: border-color 200ms var(--ease-press);
+}
+.landing-card:hover {
+  border-color: var(--ink);
+}
+.landing-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-panel);
+  background: var(--sheet);
+  transition: border-color 200ms var(--ease-press);
+}
+.landing-frame:hover {
+  border-color: var(--ink);
+}
+/* Drawn 112% tall so the parallax (-5% to +5%) never shows an edge. */
+.landing-frame-inner {
+  position: absolute;
+  inset-inline: 0;
+  top: -6%;
+  height: 112%;
+  overflow: hidden;
+  will-change: transform;
+}
+.landing-frame-zoom {
+  transition: transform 220ms var(--ease-press);
+}
+.landing-frame:hover .landing-frame-zoom {
+  transform: scale(1.02);
+}
+
+/* The theme strip on small screens scrolls sideways without a scrollbar track in the way. */
+.landing-strip {
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.landing-strip > * {
+  scroll-snap-align: start;
+}
+
+/* ── Landing hero: two-ink overprint headline, faintly out of register (2–3px) ── */
 .overprint {
   position: relative;
   display: block;
@@ -302,14 +383,19 @@
 .overprint > .overprint-blue {
   display: block;
 }
-/* The pink plate goes down first, slightly out of register. */
+/* The pink plate goes down first, a hair out of register. */
 .overprint > .overprint-pink {
   position: absolute;
   inset: 0;
   color: var(--pink);
-  transform: translate(-0.045em, 0.04em);
+  transform: translate(-2px, 1.5px);
   user-select: none;
   pointer-events: none;
+}
+@media (width >= 64rem) {
+  .overprint > .overprint-pink {
+    transform: translate(-3px, 2px);
+  }
 }
 /* The blue plate prints over it; where they cross the inks multiply. */
 .overprint > .overprint-blue {
@@ -318,15 +404,30 @@
   mix-blend-mode: multiply;
 }
 
-/* Paper grain, hero only (§3). */
-.press-grain::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .39 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+/* Headline lines rise once on load, each from behind its own mask. CSS, so it runs with
+   the first paint and needs no script; reduced motion ends it at once (rule above). The
+   mask keeps room for descenders. */
+.rise-mask {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.rise-line {
+  display: block;
+  animation: press-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(80ms + var(--i, 0) * 90ms);
+}
+@keyframes press-rise {
+  from { transform: translateY(105%); }
+  to { transform: none; }
+}
+.rise-after {
+  animation: press-rise-soft 800ms cubic-bezier(0.22, 1, 0.36, 1) 420ms both;
+}
+@keyframes press-rise-soft {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* Hero proof: blocks wait off the sheet until the timeline places them. Scoped to
@@ -334,6 +435,23 @@
 @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
   [data-compose="pending"] [data-compose-item] {
     opacity: 0;
+  }
+}
+
+/* ── Ink plot (components/charts/ink-plot.tsx): the lines are inked in left to right. ── */
+@keyframes ink-plot-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .ink-plot[data-draw="wait"] .ink-plot-series {
+    clip-path: inset(0 100% 0 0);
+  }
+  .ink-plot[data-draw="go"] .ink-plot-series {
+    animation: ink-plot-draw 1300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .ink-plot[data-draw="go"] .ink-plot-series-2 {
+    animation-delay: 160ms;
   }
 }
 
@@ -353,7 +471,6 @@
   background: color-mix(in srgb, currentColor 25%, transparent);
 }
 
-.dashboard-scroll-area::-webkit-scrollbar,
 .overflow-y-auto::-webkit-scrollbar,
 .overflow-x-auto::-webkit-scrollbar {
   width: 4px;

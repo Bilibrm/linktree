@@ -1,155 +1,215 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { getAnalytics } from "@/lib/actions/analytics"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-} from "recharts"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Check, Copy } from "lucide-react"
+import { getAnalytics, type AnalyticsRange, type AnalyticsResult } from "@/lib/actions/analytics"
+import { InkPlot } from "@/components/charts/ink-plot"
+import { Button } from "@/components/ui/button"
+import { blockTypeInfo } from "@/components/dashboard/editor/block-types"
+import { pageUrl } from "@/lib/site"
+import { cn } from "@/lib/utils"
+import type { BlockType } from "@/types"
 
-type AnalyticsData = {
-  totalClicks: number
-  totalViews: number
-  clicks7d: number
-  views7d: number
-  topLinks: { blockId: string; title: string; type: string; clicks: number }[]
-  dailyData: { _id: string; clicks: number; views: number }[]
-}
+const RANGES: { days: AnalyticsRange; label: string }[] = [
+  { days: 7, label: "7 days" },
+  { days: 30, label: "30 days" },
+  { days: 90, label: "90 days" },
+]
+const number = new Intl.NumberFormat("en-US")
+const dayLabel = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
 
+/**
+ * Stats (DESIGN_SYSTEM.md §8.6): one large plot, views in ink and taps in pink, drawn on
+ * when the data arrives; a 7/30/90-day toggle; taps per block in page order. Plain tables,
+ * tabular numbers. With nothing counted yet, it says why and offers the link to share.
+ */
 export function AnalyticsClient({ pageId, username }: { pageId: string; username: string }) {
-  const [data, setData] = useState<AnalyticsData | null>(null)
+  const [range, setRange] = useState<AnalyticsRange>(30)
+  const [data, setData] = useState<AnalyticsResult | null>(null)
+  const [failed, setFailed] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const result = await getAnalytics(pageId)
+    let live = true
+    getAnalytics(pageId, range)
+      .then((result) => {
+        if (!live) return
         setData(result)
-      } catch {
-        // handled by empty state
-      }
-      setLoading(false)
+        setFailed(false)
+      })
+      .catch(() => live && setFailed(true))
+      .finally(() => live && setLoading(false))
+    return () => {
+      live = false
     }
-    fetchData()
-  }, [pageId])
+  }, [pageId, range, attempt])
 
-  if (loading) {
-    return (
-      <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-        <Skeleton className="h-8 w-48 bg-dashboard-surface" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl bg-dashboard-surface" />
-          ))}
-        </div>
-        <Skeleton className="h-64 rounded-xl bg-dashboard-surface" />
-      </div>
-    )
+  function pick(days: AnalyticsRange) {
+    if (days === range) return
+    setLoading(true)
+    setRange(days)
   }
 
-  const chartData = data?.dailyData?.slice(-14).map((d) => ({
-    day: d._id.slice(5),
-    clicks: d.clicks,
-    views: d.views,
-  })) || []
+  // Stable per result, so the plot draws once per load, not on every render.
+  const plot = useMemo(
+    () => data?.daily.map((d) => ({ day: dayLabel.format(new Date(`${d.date}T00:00:00Z`)), views: d.views, taps: d.taps })) ?? [],
+    [data],
+  )
+  const empty = data && data.totals.views === 0 && data.totals.taps === 0
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="font-display text-display font-bold text-dashboard-text">Analytics</h1>
-        <p className="text-caption text-muted-foreground mt-0.5">How your page is performing.</p>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8 md:py-12">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <h1 className="type-title-1">Stats</h1>
+          <p className="type-small mt-2 text-ink-soft">Views of your page and taps on its blocks. Counted without cookies.</p>
+        </div>
+        <div role="group" aria-label="Time range" className="flex rounded-label border border-rule-strong p-0.5">
+          {RANGES.map((r) => (
+            <button
+              key={r.days}
+              type="button"
+              aria-pressed={r.days === range}
+              onClick={() => pick(r.days)}
+              className={cn(
+                "type-small min-h-11 rounded-[1px] px-3 font-semibold transition-colors duration-150 ease-press md:min-h-9",
+                r.days === range ? "bg-ink text-paper" : "text-ink-soft hover:bg-tint hover:text-ink",
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Top stats — prominent */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        {[
-          { label: "Total clicks", value: data?.totalClicks || 0 },
-          { label: "Total views", value: data?.totalViews || 0 },
-          { label: "Clicks (7d)", value: data?.clicks7d || 0 },
-          { label: "Views (7d)", value: data?.views7d || 0 },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-dashboard-border bg-dashboard-surface/50 p-4">
-            <p className="text-small text-muted-foreground mb-1">{stat.label}</p>
-            <p className="text-display font-bold text-dashboard-text font-mono">{stat.value.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
+      {failed && !data ? (
+        <div role="alert" className="mt-12 border-t border-rule pt-8">
+          <p className="type-title-3">Stats could not be loaded.</p>
+          <p className="type-small mt-2 text-ink-soft">Check your connection, then try again.</p>
+          <Button variant="outline" className="mt-4 h-11 px-4" onClick={() => {
+              setFailed(false)
+              setLoading(true)
+              setAttempt((n) => n + 1)
+            }}>
+            Try again
+          </Button>
+        </div>
+      ) : !data ? (
+        <StatsSkeleton />
+      ) : (
+        <div aria-busy={loading || undefined} className={cn("transition-opacity duration-200", loading && "opacity-60")}>
+          <dl className="mt-10 flex flex-wrap gap-x-16 gap-y-6 border-t border-rule pt-8">
+            <div>
+              <dt className="type-small flex items-center gap-2 text-ink-soft">
+                <span className="h-0.5 w-5 bg-ink" aria-hidden="true" />
+                Views, last {data.range} days
+              </dt>
+              <dd className="type-title-1 tabular mt-2">{number.format(data.totals.views)}</dd>
+            </div>
+            <div>
+              <dt className="type-small flex items-center gap-2 text-ink-soft">
+                <span className="h-1 w-5 bg-pink" aria-hidden="true" />
+                Taps, last {data.range} days
+              </dt>
+              <dd className="type-title-1 tabular mt-2">{number.format(data.totals.taps)}</dd>
+            </div>
+          </dl>
 
-      {/* Chart */}
-      {chartData.length > 0 && (
-        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6 mb-8">
-          <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Activity (14 days)</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={chartData}>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "var(--color-muted-foreground)", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-muted-foreground)", fontSize: 11, fontFamily: "IBM Plex Mono" }} />
-              <Tooltip contentStyle={{ backgroundColor: "var(--color-dashboard-surface)", border: "1px solid var(--color-dashboard-border)", borderRadius: "8px", color: "var(--color-dashboard-text)", fontSize: "13px", fontFamily: "IBM Plex Mono" }} />
-              <Line type="monotone" dataKey="clicks" stroke="var(--color-gold)" strokeWidth={2} dot={false} name="Clicks" />
-              <Line type="monotone" dataKey="views" stroke="var(--color-muted-foreground)" strokeWidth={1} dot={false} name="Views" opacity={0.5} />
-            </LineChart>
-          </ResponsiveContainer>
+          {empty ? (
+            <EmptyStats username={username} />
+          ) : (
+            <InkPlot
+              className="mt-10"
+              data={plot}
+              height={300}
+              draw="mount"
+              label={`Line chart of the last ${data.range} days: ${number.format(data.totals.views)} views and ${number.format(data.totals.taps)} taps.`}
+            />
+          )}
+
+          <table className="type-small mt-12 w-full border-collapse text-left">
+            <caption className="type-title-3 pb-3 text-left">Taps by block</caption>
+            <thead>
+              <tr className="border-b border-ink text-ink-soft">
+                <th scope="col" className="py-2 pr-4 font-semibold">Block</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Type</th>
+                <th scope="col" className="py-2 text-right font-semibold">Taps</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.blocks.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-4 text-ink-soft">
+                    Your page has no blocks yet. Add some on the Page tab.
+                  </td>
+                </tr>
+              ) : (
+                data.blocks.map((b) => {
+                  const type = blockTypeInfo(b.type as BlockType).label
+                  return (
+                    <tr key={b.blockId} className="border-b border-rule">
+                      <th scope="row" className="max-w-0 truncate py-3 pr-4 font-semibold sm:w-1/2">
+                        {b.text || type}
+                        {!b.isActive && <span className="ml-2 font-normal text-ink-soft">(hidden)</span>}
+                      </th>
+                      <td className="py-3 pr-4 text-ink-soft">{type}</td>
+                      <td className="tabular py-3 text-right">{number.format(b.taps)}</td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       )}
+    </div>
+  )
+}
 
-      {/* Top links + daily breakdown */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6">
-          <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Top links</h3>
-          {data?.topLinks && data.topLinks.length > 0 ? (
-            <div className="space-y-3">
-              {data.topLinks.map((link, i) => (
-                <div key={link.blockId} className="flex items-center gap-3">
-                  <span className="text-small text-muted-foreground/30 font-mono w-5">{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-caption font-medium text-dashboard-text truncate">{link.title}</p>
-                  </div>
-                  <span className="text-caption font-bold text-gold font-mono">{link.clicks}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-caption text-muted-foreground py-8 text-center">No clicks yet. Share your page to get started.</p>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/30 p-4 md:p-6">
-          <h3 className="text-small font-semibold text-muted-foreground uppercase tracking-wider font-mono mb-4">Daily breakdown</h3>
-          {data?.dailyData && data.dailyData.length > 0 ? (
-            <div className="space-y-1.5">
-              {data.dailyData.slice(-14).map((day) => (
-                <div key={day._id} className="flex items-center gap-3 text-small">
-                  <span className="w-20 text-muted-foreground font-mono">{day._id.slice(5)}</span>
-                  <div className="flex-1 flex gap-1">
-                    <div
-                      className="h-2.5 rounded-sm bg-gold/80"
-                      style={{ width: `${Math.min(100, (day.clicks / Math.max(...data!.dailyData.map((d) => d.clicks), 1)) * 100)}%` }}
-                    />
-                    <div
-                      className="h-2.5 rounded-sm bg-bone/20"
-                      style={{ width: `${Math.min(100, (day.views / Math.max(...data!.dailyData.map((d) => d.views), 1)) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="w-16 text-right text-muted-foreground font-mono">
-                    {day.clicks}c / {day.views}v
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-caption text-muted-foreground py-8 text-center">No activity recorded yet.</p>
-          )}
-        </div>
+function StatsSkeleton() {
+  return (
+    <div className="mt-10 border-t border-rule pt-8" aria-busy="true" aria-label="Loading stats">
+      <div className="flex gap-16">
+        <div className="h-16 w-36 rounded-label bg-tint" />
+        <div className="h-16 w-36 rounded-label bg-tint" />
       </div>
+      <div className="mt-10 h-[300px] rounded-panel bg-tint" />
+    </div>
+  )
+}
 
-      <div className="mt-8 text-center">
-        <a
-          href={`/${username}`}
-          target="_blank"
-          className="inline-flex items-center min-h-[44px] text-caption text-gold hover:text-gold/80 transition-colors"
-        >
-          View your public page
-        </a>
+function EmptyStats({ username }: { username: string }) {
+  const [copied, setCopied] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current)
+  }, [])
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(pageUrl(username))
+      setCopied(true)
+      if (timer.current) clearTimeout(timer.current)
+      timer.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  return (
+    <div className="mt-10 flex flex-col items-start gap-4 rounded-panel border border-dashed border-rule-strong p-8">
+      <span className="h-1 w-10 bg-sun" aria-hidden="true" />
+      <div>
+        <p className="type-title-3">Nothing counted yet</p>
+        <p className="type-small mt-1 max-w-[52ch] text-ink-soft">
+          Views appear here once people open your page. Share your link in your bio, a post or a message to get the first ones.
+        </p>
       </div>
+      <Button variant="outline" className="h-11 px-4" onClick={copy}>
+        {copied ? <Check className="press-tick" aria-hidden="true" /> : <Copy aria-hidden="true" />}
+        {copied ? "Link copied" : "Copy your link"}
+      </Button>
     </div>
   )
 }

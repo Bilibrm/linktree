@@ -138,3 +138,10 @@ export const sampleBlockTaps: { label: string; kind: string; taps: number }[] = 
   { label: "Book a workshop", kind: "Button", taps: 318 },
   { label: "Studio letter", kind: "Link", taps: 206 },
 ]
+
+/** Every character a sample page shows, so theme fonts can be fetched as small subsets. */
+export const sampleText = [
+  samplePerson.name,
+  samplePerson.bio,
+  ...pickerBlocks.map((b) => String(b.data.title ?? b.data.label ?? "")),
+].join(" ")

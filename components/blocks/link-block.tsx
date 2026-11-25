@@ -28,7 +28,7 @@ export function LinkBlock({ data, blockId, pageId }: BlockComponentProps) {
       href={href ?? undefined}
       target="_blank"
       rel="noopener noreferrer"
-      className={data.featured ? "lp-tile lp-featured" : "lp-tile"}
+      className={data.featured ? "lp-tile ln-link lp-featured" : "lp-tile ln-link"}
       {...trackAttrs(blockId, pageId)}
     >
       {icon && (

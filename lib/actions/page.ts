@@ -127,12 +127,3 @@ export async function updateMyProfile(formData: FormData) {
   if (session.user.username) revalidatePath(`/${session.user.username}`)
   return { success: true }
 }
-
-export async function verifyPagePassword(pageId: string, password: string) {
-  await connectDB()
-  const page = await Page.findById(pageId).select("passwordHash").lean()
-  if (!page?.passwordHash) return { ok: false }
-  const match = await bcrypt.compare(password, page.passwordHash)
-  if (!match) return { ok: false }
-  return { ok: true }
-}

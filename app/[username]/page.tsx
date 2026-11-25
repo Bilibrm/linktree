@@ -3,9 +3,8 @@ import type { Metadata } from "next"
 import { connectDB } from "@/lib/db/mongoose"
 import { User } from "@/lib/models/user"
 import { Page } from "@/lib/models/page"
-import { Block } from "@/lib/models/block"
-import { serializeBlockLean } from "@/lib/serialize-block"
-import { resolveTheme, sanitizeCustomCSS, themeRootProps } from "@/lib/themes"
+import { loadVisibleBlocks } from "@/lib/page-unlock"
+import { resolveTheme, sanitizeCustomCSS } from "@/lib/themes"
 import { MadeWithLinkNest, ThemedPage } from "@/components/page/themed-page"
 import { PageBeacon } from "@/components/page/page-beacon"
 import { PasswordGate } from "@/components/page/password-gate"
@@ -49,6 +48,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * The public page (DESIGN_SYSTEM.md §8.8). Rendered on the server in the owner's theme;
  * the only client code is the page beacon and the blocks that need it (form, countdown,
  * video) — plus the lock screen on a password-protected page.
+ *
+ * A password-protected page renders only its lock screen here: no block is read, so none
+ * reaches the HTML, the flight payload or the shared cache. Blocks come from
+ * `lib/actions/unlock.ts` after the password is checked on the server.
  */
 export default async function UserPage({ params }: Props) {
   const { username } = await params
@@ -60,25 +63,12 @@ export default async function UserPage({ params }: Props) {
   const page = await Page.findOne({ userId: user._id, isPublished: true }).lean()
   if (!page) notFound()
 
-  const now = new Date()
-  const blocks = (await Block.find({ pageId: page._id, isActive: true }).sort({ order: 1 }).lean())
-    .filter((b) => !(b.startAt && b.startAt > now) && !(b.endAt && b.endAt < now))
-    .map((b) => serializeBlockLean(b))
-
   const theme = resolveTheme(page.theme)
   const name = user.name || user.username
   const pageId = page._id.toString()
   const css = theme.customCSS ? sanitizeCustomCSS(theme.customCSS) : ""
-
-  const content = (
-    <ThemedPage
-      theme={theme}
-      header={{ name, title: page.title, bio: page.bio, avatarUrl: user.avatarUrl || undefined }}
-      blocks={blocks}
-      page
-      footer={<MadeWithLinkNest />}
-    />
-  )
+  const header = { name, title: page.title, bio: page.bio, avatarUrl: user.avatarUrl || undefined }
+  const locked = page.visibility === "password"
 
   return (
     <>
@@ -89,15 +79,12 @@ export default async function UserPage({ params }: Props) {
         </>
       )}
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
-      {page.visibility === "password" ? (
-        <PasswordGate pageId={pageId} name={name} root={themeRootProps(theme)}>
-          <PageBeacon pageId={pageId} />
-          {content}
-        </PasswordGate>
+      {locked ? (
+        <PasswordGate pageId={pageId} theme={theme} header={header} />
       ) : (
         <>
           <PageBeacon pageId={pageId} />
-          {content}
+          <ThemedPage theme={theme} header={header} blocks={await loadVisibleBlocks(pageId)} page footer={<MadeWithLinkNest />} />
         </>
       )}
     </>

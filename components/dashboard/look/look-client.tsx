@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { flushSync } from "react-dom"
-import { ImageUp, Loader2, Palette, Play } from "lucide-react"
+import { ChevronUp, ImageUp, Loader2, Palette, Play } from "lucide-react"
 import { toast } from "sonner"
 import type { IBlock } from "@/types"
 import {
@@ -163,6 +163,8 @@ export function LookClient({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [replay, setReplay] = useState(0)
   const [ambient, setAmbient] = useState(false)
+  // Below 768px the controls are a bottom sheet over the proof (§8.3), closed to a bar.
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [typeOpen, setTypeOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
@@ -276,7 +278,7 @@ export function LookClient({
   return (
     <div className="md:flex md:h-full md:min-h-0">
       <div data-canvas className="min-w-0 md:flex-1 md:overflow-y-auto">
-        <div className="mx-auto w-full max-w-[438px] px-4 py-6 md:py-10">
+        <div className="mx-auto w-full max-w-[438px] px-4 pt-6 pb-24 md:py-10">
           <h1 className="sr-only">Your look</h1>
           <div style={{ viewTransitionName: "look-proof" }}>
             <PublicPreview
@@ -297,15 +299,36 @@ export function LookClient({
         </div>
       </div>
 
-      <aside aria-label="Look" className="border-t border-rule bg-sheet md:w-[340px] md:shrink-0 md:overflow-y-auto md:border-t-0 md:border-l">
+      <aside
+        aria-label="Look"
+        className={cn(
+          "bg-sheet md:w-[340px] md:shrink-0 md:overflow-y-auto md:border-l md:border-rule",
+          // A bottom sheet over the proof below 768px, docked above the tab bar.
+          "max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-md:z-30 max-md:rounded-t-panel max-md:border max-md:border-b-0 max-md:border-ink max-md:shadow-offset",
+        )}
+      >
         <section data-inspector aria-labelledby="look-title">
-          <header className="flex items-center gap-2.5 border-b border-rule px-4 py-3">
-            <Palette className="size-[18px] shrink-0 text-ink" strokeWidth={1.75} aria-hidden="true" />
-            <h2 id="look-title" className="type-title-3 text-ink">
+          <header className="flex items-center gap-2.5 border-b border-rule px-4 py-3 max-md:border-b-0 max-md:p-0">
+            <Palette className="size-[18px] shrink-0 text-ink max-md:hidden" strokeWidth={1.75} aria-hidden="true" />
+            <h2 id="look-title" className="type-title-3 text-ink max-md:hidden">
               Look
             </h2>
-            <p className="type-micro ml-auto font-medium text-ink-soft">{theme.name}</p>
+            <p className="type-micro ml-auto font-medium text-ink-soft max-md:hidden">{theme.name}</p>
+            <button
+              type="button"
+              aria-expanded={sheetOpen}
+              aria-controls="look-controls"
+              onClick={() => setSheetOpen((open) => !open)}
+              className="flex min-h-14 w-full items-center gap-2.5 px-4 text-left md:hidden"
+            >
+              <Palette className="size-[18px] shrink-0 text-ink" strokeWidth={1.75} aria-hidden="true" />
+              <span className="type-title-3 text-ink">Look</span>
+              <span className="type-small ml-1 truncate text-ink-soft">{theme.name}</span>
+              <span className="type-small ml-auto font-semibold text-ink">{sheetOpen ? "Close" : "Change"}</span>
+              <ChevronUp className={cn("size-[18px] shrink-0 text-ink transition-transform duration-200 ease-press", sheetOpen && "rotate-180")} strokeWidth={1.75} aria-hidden="true" />
+            </button>
           </header>
+          <div id="look-controls" className={cn("max-md:max-h-[55dvh] max-md:overflow-y-auto max-md:border-t max-md:border-rule", !sheetOpen && "max-md:hidden")}>
 
           <LookGroup title="Themes" summary={theme.name} open>
             <fieldset>
@@ -451,11 +474,19 @@ export function LookClient({
             <label htmlFor="look-css" className="type-small block font-semibold text-ink">
               Custom CSS
             </label>
-            <p className="type-small -mt-3 font-normal text-ink-soft">
-              Applies on your public page only, so the editor stays usable. The page root is <code>.lp</code>; links are <code>.lp-tile</code>.
+            <p id="look-css-help" className="type-small -mt-3 font-normal text-ink-soft">
+              Applies on your public page only, so the editor stays usable. These class names will not change:
             </p>
+            <ul className="type-small -mt-2 grid gap-1 font-normal text-ink-soft" aria-label="Class names for custom CSS">
+              <li><code className="font-semibold text-ink">.ln-page</code> the whole page</li>
+              <li><code className="font-semibold text-ink">.ln-header</code>, <code className="font-semibold text-ink">.ln-avatar</code>, <code className="font-semibold text-ink">.ln-name</code>, <code className="font-semibold text-ink">.ln-title</code>, <code className="font-semibold text-ink">.ln-bio</code> the top of the page</li>
+              <li><code className="font-semibold text-ink">.ln-block</code> every block, and <code className="font-semibold text-ink">.ln-block--link</code>, <code className="font-semibold text-ink">.ln-block--image</code> and so on by type</li>
+              <li><code className="font-semibold text-ink">.ln-link</code> link tiles</li>
+              <li><code className="font-semibold text-ink">.ln-footer</code> the Made with LinkNest line</li>
+            </ul>
             <Textarea
               id="look-css"
+              aria-describedby="look-css-help"
               defaultValue={draft.customCSS}
               rows={8}
               maxLength={20000}
@@ -465,6 +496,7 @@ export function LookClient({
               style={{ fontFamily: "ui-monospace, 'Cascadia Code', Menlo, monospace" }}
             />
           </LookGroup>
+          </div>
         </section>
       </aside>
     </div>
