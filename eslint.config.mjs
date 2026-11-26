@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent tooling / vendored skills — not app code.
+    ".claude/**",
+    ".cursor/**",
+    ".agents/**",
+    "graphify-out/**",
   ]),
 ]);
 

@@ -1,27 +1,34 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Public page theming", () => {
+async function horizontalOverflow(page: import("@playwright/test").Page) {
+  return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+}
+
+test.describe("Public pages", () => {
   test("landing page loads", async ({ page }) => {
     await page.goto("/")
-    await expect(page.locator("body")).toBeVisible()
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
   })
 
   test("auth page loads", async ({ page }) => {
     await page.goto("/auth/login")
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Log in" })).toBeVisible()
   })
 
-  test("scrollbar styles are injected", async ({ page }) => {
-    await page.goto("/")
-    const hasScrollbarStyle = await page.evaluate(() => {
-      const sheet = document.styleSheets[0]
-      if (!sheet) return false
-      for (let i = 0; i < sheet.cssRules.length; i++) {
-        const rule = sheet.cssRules[i] as CSSStyleRule
-        if (rule.selectorText?.includes("::-webkit-scrollbar")) return true
-      }
-      return false
-    })
-    expect(hasScrollbarStyle).toBe(true)
+  test("an unclaimed name gets the styled not-found page", async ({ page }) => {
+    const response = await page.goto("/no-one-has-this-name-yet")
+    expect(response?.status()).toBe(404)
+    await expect(page.getByRole("heading", { name: /nobody has printed this page/i })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Claim a name" })).toHaveAttribute("href", "/auth/signup")
   })
+
+  for (const width of [360, 768, 1440]) {
+    test(`nothing scrolls sideways at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      for (const path of ["/", "/no-one-has-this-name-yet"]) {
+        await page.goto(path)
+        expect(await horizontalOverflow(page), path).toBeLessThanOrEqual(0)
+      }
+    })
+  }
 })

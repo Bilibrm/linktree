@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose"
+import type { ThemeV2 } from "@/lib/themes/types"
 
 export interface IPageDocument extends Document {
   userId: mongoose.Types.ObjectId
@@ -6,6 +7,7 @@ export interface IPageDocument extends Document {
   bio: string
   theme: {
     preset: string
+    v2?: ThemeV2
     backgroundColor?: string
     backgroundType?: string
     backgroundValue?: string
@@ -47,6 +49,34 @@ const pageSchema = new Schema<IPageDocument>(
     bio: { type: String, default: "", maxlength: 500 },
     theme: {
       preset: { type: String, default: "minimal" },
+      // Theme system v2: the theme id and the layers the owner changed. No defaults on
+      // purpose: a document without `v2.theme` is a v1 page and is read as one.
+      v2: {
+        theme: { type: String },
+        palette: {
+          background: { type: String },
+          surface: { type: String },
+          text: { type: String },
+          accent: { type: String },
+          accentText: { type: String },
+        },
+        font: { type: String },
+        layout: { type: String },
+        width: { type: String },
+        density: { type: String },
+        avatar: { type: String },
+        blockStyle: { type: String },
+        shape: { type: String },
+        background: {
+          kind: { type: String },
+          ink: { type: String },
+          image: { type: String },
+        },
+        motion: {
+          entrance: { type: String },
+          hover: { type: String },
+        },
+      },
       backgroundColor: { type: String },
       backgroundType: { type: String, default: "solid" },
       backgroundValue: { type: String },

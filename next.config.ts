@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.pexels.com" },
     ],
   },
+  experimental: {
+    // Dashboard tab changes crossfade through React <ViewTransition> (DESIGN_SYSTEM.md §6.2).
+    viewTransition: true,
+  },
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -25,11 +29,15 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: res.cloudinary.com *.cloudinary.com https://images.pexels.com",
-              "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com",
+              // Theme font pairs load one Google Fonts stylesheet (lib/themes/fonts.ts).
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              // Owners link images from anywhere (avatars, thumbnails, favicons): any https image.
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "media-src 'self' blob: https:",
               "connect-src 'self'",
-              "frame-src 'none'",
+              // The two players the embed block knows (components/blocks/embed-block.tsx).
+              "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

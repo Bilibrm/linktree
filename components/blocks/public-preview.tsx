@@ -1,8 +1,29 @@
-import { useMemo } from "react"
-import type { IBlock, ThemeConfig } from "@/types"
-import { BlockRenderer } from "./block-renderer"
-import { getAvatarRadius, getLayoutMaxWidth, getSpacingGap, getBlockSpanClass, themeToCSSVars, getBackgroundStyle } from "@/lib/theme-utils"
+"use client"
 
+import { useMemo } from "react"
+import type { IBlock } from "@/types"
+import type { ResolvedTheme } from "@/lib/themes"
+import { ThemedPage, type ItemProps } from "@/components/page/themed-page"
+import { useThemeFonts } from "@/components/page/theme-fonts"
+import { cn } from "@/lib/utils"
+
+function isLive(block: IBlock, now: Date) {
+  if (!block.isActive) return false
+  if (block.startAt && new Date(block.startAt) > now) return false
+  if (block.endAt && new Date(block.endAt) < now) return false
+  return true
+}
+
+/**
+ * The owner's page at phone width, drawn by the same `ThemedPage` as `/[username]`. One
+ * component serves two jobs:
+ *
+ * - a read-only proof (no `renderBlock`): the whole page is `inert`;
+ * - the editor's proof: `renderBlock` and `renderHeader` wrap each piece so the editor can
+ *   add selection, drag handles and insertion points around the real rendered block.
+ *
+ * The owner's custom CSS is left out here; it applies on the public page only.
+ */
 export function PublicPreview({
   blocks,
   username,
@@ -11,7 +32,15 @@ export function PublicPreview({
   bio,
   title,
   theme,
-  editable,
+  showInactive,
+  still = true,
+  ambient = false,
+  replayKey,
+  renderBlock,
+  renderHeader,
+  empty,
+  gridProps,
+  className,
 }: {
   blocks: IBlock[]
   username: string
@@ -19,73 +48,44 @@ export function PublicPreview({
   avatarUrl?: string
   bio?: string
   title?: string
-  theme?: ThemeConfig
-  editable?: boolean
+  theme: ResolvedTheme
+  /** Keep hidden and out-of-schedule blocks in the list (the editor dims and labels them). */
+  showInactive?: boolean
+  /** No entrance, no ambient motion. The Look panel turns it off to show the theme's motion. */
+  still?: boolean
+  /** Ambient background motion; the app keeps it off unless the owner previews it. */
+  ambient?: boolean
+  /** Changing it replays the entrance (the Look panel passes the theme id). */
+  replayKey?: string
+  renderBlock?: (block: IBlock, index: number, content: React.ReactNode, itemProps: ItemProps) => React.ReactNode
+  renderHeader?: (content: React.ReactNode) => React.ReactNode
+  empty?: React.ReactNode
+  gridProps?: React.HTMLAttributes<HTMLDivElement>
+  className?: string
 }) {
-  const visibleBlocks = useMemo(() => blocks.filter((b) => {
-    if (!b.isActive) return false
+  useThemeFonts([theme.font.href])
+  const visible = useMemo(() => {
+    if (showInactive) return blocks
     const now = new Date()
-    if (b.startAt && new Date(b.startAt) > now) return false
-    if (b.endAt && new Date(b.endAt) < now) return false
-    return true
-  }), [blocks])
-
-  const t: ThemeConfig = useMemo(() => theme || { preset: "minimal" }, [theme])
-  const name = displayName || username
-  const cssVars = useMemo(() => themeToCSSVars(t), [t])
-  const bgStyle = useMemo(() => getBackgroundStyle(t), [t])
-  const avatarRadius = getAvatarRadius(t)
-  const maxWidth = getLayoutMaxWidth(t)
-  const gap = getSpacingGap(t)
+    return blocks.filter((b) => isLive(b, now))
+  }, [blocks, showInactive])
+  const readOnly = !renderBlock
 
   return (
-    <div className="rounded-[20px] overflow-hidden border border-white/[0.06] shadow-xl shadow-black/20 bg-black/40 backdrop-blur-[2px]">
-      <div className="relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[18px] bg-black/80 rounded-b-xl z-10 flex items-center justify-center gap-1.5">
-          <div className="w-[6px] h-[6px] rounded-full bg-white/20" />
-          <div className="w-[30px] h-[3px] rounded-full bg-white/30" />
-        </div>
-        <div
-          className={`p-6 pt-8 flex flex-col items-center ${editable ? "pointer-events-none select-none" : ""}`}
-          style={{ ...bgStyle, ...cssVars, fontFamily: "var(--page-font-family)" }}
-        >
-          <div className={`mx-auto w-full ${maxWidth} flex flex-col items-center`}>
-            <div className={`p-[2.5px] avatar-ring ${avatarRadius} mb-3`}>
-              <div
-                className={`w-14 h-14 flex items-center justify-center text-lg font-display font-bold overflow-hidden ${avatarRadius}`}
-                style={{ backgroundColor: avatarUrl ? "transparent" : "var(--page-accent)", color: "var(--page-button-text)" }}
-              >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-                ) : (
-                  name.charAt(0).toUpperCase()
-                )}
-              </div>
-            </div>
-            <h1 className="text-sm font-display font-bold" style={{ color: "var(--page-accent)" }}>@{username}</h1>
-            {title && <p className="text-[11px] mt-0.5" style={{ color: "var(--page-accent)", opacity: 0.7 }}>{title}</p>}
-            {bio && <p className="text-[11px] mt-2 text-center leading-relaxed" style={{ color: "var(--page-accent)", opacity: 0.6 }}>{bio}</p>}
-
-            <div className={`w-full mt-4 grid grid-cols-2 ${gap}`}>
-              {visibleBlocks.map((block, i) => (
-                <div key={block._id} className={getBlockSpanClass(block.type, block.data)}>
-                  <BlockRenderer block={block} theme={t} index={i} />
-                </div>
-              ))}
-            </div>
-
-            {visibleBlocks.length === 0 && (
-              <p className="text-[11px] mt-6 text-center" style={{ color: "var(--page-accent)", opacity: 0.5 }}>
-                Your page is empty so far.
-              </p>
-            )}
-
-            <div className="mt-5 mb-1 text-center">
-              <span className="text-[9px]" style={{ color: "var(--page-accent)", opacity: 0.35 }}>LinkNest</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div inert={readOnly || undefined} className={cn("overflow-hidden rounded-panel border border-rule-strong", readOnly && "select-none", className)}>
+      <ThemedPage
+        key={replayKey}
+        theme={theme}
+        header={{ name: displayName || username, title, bio, avatarUrl }}
+        blocks={visible}
+        still={still}
+        ambient={ambient}
+        nameAs="p"
+        renderBlock={renderBlock}
+        renderHeader={renderHeader}
+        empty={empty}
+        listProps={gridProps}
+      />
     </div>
   )
 }

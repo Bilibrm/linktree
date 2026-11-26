@@ -3,7 +3,9 @@ import { redirect } from "next/navigation"
 import { connectDB } from "@/lib/db/mongoose"
 import { Page } from "@/lib/models/page"
 import { Block } from "@/lib/models/block"
-import { DashboardClient } from "@/components/dashboard/dashboard-client"
+import { User } from "@/lib/models/user"
+import { EditorClient } from "@/components/dashboard/editor/editor-client"
+import { pageThemeToConfig, serializeBlockLean } from "@/lib/serialize-block"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -13,29 +15,24 @@ export default async function DashboardPage() {
   const page = await Page.findOne({ userId: session.user.id }).lean()
   if (!page) redirect("/auth/signup")
 
-  const blocks = await Block.find({ pageId: page._id }).sort({ order: 1 }).lean()
-
-  const serializedBlocks = blocks.map((b) => ({
-    _id: b._id.toString(),
-    pageId: b.pageId.toString(),
-    type: b.type as any,
-    order: b.order,
-    data: b.data as any,
-    startAt: b.startAt?.toISOString() ?? null,
-    endAt: b.endAt?.toISOString() ?? null,
-    isActive: b.isActive,
-  }))
+  const [blocks, user] = await Promise.all([
+    Block.find({ pageId: page._id }).sort({ order: 1 }).lean(),
+    User.findById(session.user.id).select("name avatarUrl").lean(),
+  ])
 
   return (
-    <DashboardClient
+    <EditorClient
       pageId={page._id.toString()}
       username={session.user.username || ""}
-      initialBlocks={serializedBlocks}
-      theme={page.theme as any}
-      displayName={page.title || session.user.username || ""}
-      avatarUrl={(page as any).avatarUrl}
-      bio={page.bio}
-      title={page.title}
+      initialBlocks={blocks.map((b) => serializeBlockLean(b))}
+      theme={pageThemeToConfig(page.theme)}
+      // Same sources as the public page: the name and photo live on the user, the tagline and bio on the page.
+      initialBasics={{
+        displayName: user?.name || "",
+        avatarUrl: user?.avatarUrl || "",
+        title: page.title || "",
+        bio: page.bio || "",
+      }}
     />
   )
 }

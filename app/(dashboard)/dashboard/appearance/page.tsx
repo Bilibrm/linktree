@@ -3,7 +3,10 @@ import { redirect } from "next/navigation"
 import { connectDB } from "@/lib/db/mongoose"
 import { Page } from "@/lib/models/page"
 import { Block } from "@/lib/models/block"
-import { AppearanceClient } from "@/components/dashboard/appearance-client"
+import { User } from "@/lib/models/user"
+import { LookClient } from "@/components/dashboard/look/look-client"
+import { serializeBlockLean } from "@/lib/serialize-block"
+import { draftFromStored } from "@/lib/themes"
 
 export default async function AppearancePage() {
   const session = await auth()
@@ -13,30 +16,21 @@ export default async function AppearancePage() {
   const page = await Page.findOne({ userId: session.user.id }).lean()
   if (!page) redirect("/auth/signup")
 
-  const blocks = await Block.find({ pageId: page._id, isActive: true }).sort({ order: 1 }).lean()
+  const [blocks, user] = await Promise.all([
+    Block.find({ pageId: page._id, isActive: true }).sort({ order: 1 }).lean(),
+    User.findById(session.user.id).select("name avatarUrl").lean(),
+  ])
 
-  const serializedBlocks = blocks.map((b) => ({
-    _id: b._id.toString(),
-    pageId: b.pageId.toString(),
-    type: b.type as any,
-    order: b.order,
-    data: b.data as any,
-    startAt: b.startAt?.toISOString() ?? null,
-    endAt: b.endAt?.toISOString() ?? null,
-    isActive: b.isActive,
-  }))
+  // The stored theme in whatever shape it has, turned into the recipe the panel edits.
+  const draft = draftFromStored(JSON.parse(JSON.stringify(page.theme ?? {})))
 
   return (
-    <AppearanceClient
-      pageId={page._id.toString()}
-      initialTheme={page.theme as any}
+    <LookClient
+      initialDraft={draft}
       username={session.user.username || ""}
-      blocks={serializedBlocks}
-      displayName={page.title || session.user.username || ""}
-      avatarUrl={(page as any).avatarUrl}
-      bio={page.bio}
-      title={page.title}
-      initialVisibility={page.visibility || "public"}
+      blocks={blocks.map((b) => serializeBlockLean(b))}
+      // Same sources as the public page: name and photo on the user, tagline and bio on the page.
+      header={{ displayName: user?.name || "", avatarUrl: user?.avatarUrl || undefined, title: page.title || "", bio: page.bio || "" }}
     />
   )
 }

@@ -66,25 +66,3 @@ export function PlatformIcon({ platform, className = "w-4 h-4" }: { platform: st
     />
   )
 }
-
-export function PlatformIconRow({ platforms, selected, onSelect }: { platforms: typeof PLATFORMS; selected?: string; onSelect: (id: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
-      {platforms.map((p) => (
-        <button
-          key={p.id}
-          type="button"
-          onClick={() => onSelect(p.id)}
-          title={p.label}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-            selected === p.id
-              ? "bg-gold text-ink ring-1 ring-gold"
-              : "bg-ink text-muted-foreground hover:text-bone hover:bg-surface border border-white/5"
-          }`}
-        >
-          <PlatformIcon platform={p.id} className="w-4 h-4" />
-        </button>
-      ))}
-    </div>
-  )
-}

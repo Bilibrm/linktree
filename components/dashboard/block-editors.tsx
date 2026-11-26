@@ -1,22 +1,87 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, XCircle } from "lucide-react"
 import { PLATFORMS, PlatformIcon } from "@/components/blocks/platform-icons"
+import type { FlatBlockData } from "@/lib/validation"
+import { cn } from "@/lib/utils"
 
 export type EditorProps = {
-  data: Record<string, any>
-  onChange: (data: Record<string, any>) => void
+  data: FlatBlockData
+  onChange: (data: FlatBlockData) => void
 }
 
-function PlatformSelect({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+/* Inspector field pieces. 44px tall on touch, 36px from 768px up. */
+const control = "h-11 md:h-9"
+const selectClass = cn(
+  control,
+  "w-full rounded-label border border-input bg-sheet px-2.5 text-base text-ink transition-colors hover:border-ink md:text-sm"
+)
+const removeButton =
+  "flex size-11 shrink-0 items-center justify-center rounded-label text-ink-soft transition-colors duration-150 hover:bg-tint hover:text-danger-ink md:size-9"
+
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string
+  hint?: string
+  children: (id: string) => React.ReactNode
+}) {
+  const id = useId()
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="type-small text-ink">
+        {label}
+        {hint && <span className="font-normal text-ink-soft">{hint}</span>}
+      </Label>
+      {children(id)}
+    </div>
+  )
+}
+
+export function SwitchRow({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  label: string
+  description?: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) {
+  const id = useId()
+  return (
+    <div className="flex min-h-11 items-center justify-between gap-4">
+      <div>
+        <Label htmlFor={id} className="type-small text-ink">
+          {label}
+        </Label>
+        {description && <p className="type-small font-normal text-ink-soft">{description}</p>}
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  )
+}
+
+function AddRowButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <Button type="button" variant="outline" onClick={onClick} className={cn(control, "w-full")}>
+      <Plus aria-hidden="true" />
+      {children}
+    </Button>
+  )
+}
+
+function PlatformSelect({ value, onChange, label }: { value: string; onChange: (val: string) => void; label: string }) {
   const [open, setOpen] = useState(false)
   const selected = PLATFORMS.find((p) => p.id === value)
 
@@ -27,17 +92,18 @@ function PlatformSelect({ value, onChange }: { value: string; onChange: (val: st
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-small hover:bg-dashboard-bg hover:text-dashboard-text"
+          aria-label={label}
+          className={cn(control, "w-full justify-between bg-sheet px-2.5 font-normal")}
         >
           {selected ? (
-            <span className="flex items-center gap-2">
-              <PlatformIcon platform={selected.id} className="w-4 h-4" />
-              <span>{selected.label}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <PlatformIcon platform={selected.id} className="size-4 shrink-0" />
+              <span className="truncate">{selected.label}</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">Select platform</span>
+            <span className="text-ink-soft">Choose a platform</span>
           )}
-          <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <ChevronsUpDown className="size-3.5 shrink-0 text-ink-soft" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-0" align="start">
@@ -45,16 +111,19 @@ function PlatformSelect({ value, onChange }: { value: string; onChange: (val: st
           {PLATFORMS.map((p) => (
             <button
               key={p.id}
-              onClick={() => { onChange(p.id); setOpen(false) }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-small rounded-md transition-colors ${
-                value === p.id
-                  ? "bg-gold/10 text-gold"
-                  : "text-dashboard-text hover:bg-dashboard-bg"
-              }`}
+              type="button"
+              onClick={() => {
+                onChange(p.id)
+                setOpen(false)
+              }}
+              className={cn(
+                "flex min-h-11 w-full items-center gap-2.5 rounded-label px-3 text-sm transition-colors md:min-h-9",
+                value === p.id ? "bg-tint font-semibold text-ink" : "text-ink hover:bg-tint"
+              )}
             >
-              <PlatformIcon platform={p.id} className="w-4 h-4 shrink-0" />
+              <PlatformIcon platform={p.id} className="size-4 shrink-0" />
               <span className="flex-1 text-left">{p.label}</span>
-              {value === p.id && <Check className="w-3.5 h-3.5 shrink-0" />}
+              {value === p.id && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
             </button>
           ))}
         </div>
@@ -63,317 +132,336 @@ function PlatformSelect({ value, onChange }: { value: string; onChange: (val: st
   )
 }
 
-export function LinkEditor({ data, onChange }: EditorProps) {
+/** Optional platform glyph for a link or button. The chosen one is filled and checked. */
+function IconPicker({ value, onChange }: { value?: string; onChange: (val: string) => void }) {
+  const chosen = PLATFORMS.find((p) => p.id === value)
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Title</Label>
-        <Input value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">URL</Label>
-        <Input value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">
-          Social icon <span className="text-muted-foreground/50">(optional)</span>
-        </Label>
-        <div className="flex items-center gap-2 mb-1.5">
-          {data.icon && (
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-dashboard-surface border border-dashboard-border">
-              <PlatformIcon platform={data.icon} className="w-4 h-4" />
-              <span className="text-small text-muted-foreground capitalize">{data.icon}</span>
-              <button type="button" onClick={() => onChange({ ...data, icon: "" })} aria-label="Clear icon" className="text-muted-foreground/50 hover:text-coral transition-colors ml-1">
-                <XCircle className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1 rounded-lg border border-dashboard-border bg-dashboard-bg/50">
-          {PLATFORMS.map((p) => (
+    <fieldset className="space-y-1.5">
+      <legend className="type-small text-ink">
+        Icon <span className="font-normal text-ink-soft">(optional{chosen ? `, ${chosen.label}` : ""})</span>
+      </legend>
+      <div className="flex max-h-36 flex-wrap gap-1 overflow-y-auto rounded-label border border-rule p-1">
+        {PLATFORMS.map((p) => {
+          const on = value === p.id
+          return (
             <button
               key={p.id}
               type="button"
-              onClick={() => onChange({ ...data, icon: data.icon === p.id ? "" : p.id })}
+              aria-pressed={on}
+              aria-label={p.label}
               title={p.label}
-              className={`min-h-[44px] min-w-[44px] rounded-lg flex items-center justify-center transition-all ${
-                data.icon === p.id
-                  ? "bg-gold text-ink ring-1 ring-gold"
-                  : "text-muted-foreground hover:text-dashboard-text hover:bg-dashboard-surface"
-              }`}
+              onClick={() => onChange(on ? "" : p.id)}
+              className={cn(
+                "relative flex size-11 items-center justify-center rounded-label transition-colors duration-150 md:size-9",
+                on ? "bg-ink text-paper" : "text-ink-soft hover:bg-tint hover:text-ink"
+              )}
             >
-              <PlatformIcon platform={p.id} className="w-4 h-4" />
+              <PlatformIcon platform={p.id} className="size-4" />
             </button>
-          ))}
-        </div>
+          )
+        })}
       </div>
-      <div className="flex items-center justify-between pt-1 pb-0.5">
-        <div>
-          <Label className="text-small text-dashboard-text">Featured</Label>
-          <p className="text-small text-muted-foreground/60">Stand out from your other links.</p>
-        </div>
-        <Switch checked={!!data.featured} onCheckedChange={(checked) => onChange({ ...data, featured: checked })} />
-      </div>
+    </fieldset>
+  )
+}
+
+export function LinkEditor({ data, onChange }: EditorProps) {
+  return (
+    <div className="space-y-4">
+      <Field label="Title">
+        {(id) => <Input id={id} className={control} value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} />}
+      </Field>
+      <Field label="Web address">
+        {(id) => (
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://" value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} />
+        )}
+      </Field>
+      <IconPicker value={data.icon} onChange={(icon) => onChange({ ...data, icon })} />
+      <SwitchRow
+        label="Featured"
+        description="Full width and filled, above the rest."
+        checked={!!data.featured}
+        onCheckedChange={(featured) => onChange({ ...data, featured })}
+      />
     </div>
   )
 }
 
 export function HeaderEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-small text-muted-foreground">Header text</Label>
-      <Input value={data.text || ""} onChange={(e) => onChange({ ...data, text: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-    </div>
+    <Field label="Heading">
+      {(id) => <Input id={id} className={control} value={data.text || ""} onChange={(e) => onChange({ ...data, text: e.target.value })} />}
+    </Field>
   )
 }
 
 export function TextEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-small text-muted-foreground">Content</Label>
-      <Textarea value={data.content || ""} onChange={(e) => onChange({ ...data, content: e.target.value })} rows={3} className="bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20 resize-none" />
-    </div>
+    <Field label="Text">
+      {(id) => <Textarea id={id} rows={5} className="resize-y" value={data.content || ""} onChange={(e) => onChange({ ...data, content: e.target.value })} />}
+    </Field>
   )
 }
 
 export function SocialEditor({ data, onChange }: EditorProps) {
+  const links = data.links || []
+  const update = (i: number, patch: Partial<{ platform: string; url: string }>) =>
+    onChange({ ...data, links: links.map((link, j) => (j === i ? { ...link, ...patch } : link)) })
+
   return (
-    <div className="space-y-2">
-      {(data.links || []).map((link: any, i: number) => (
-        <div key={i} className="flex gap-2 items-start">
-          <div className="flex-1 space-y-1.5">
-            <Label className="text-small text-muted-foreground">Platform {i + 1}</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <PlatformSelect
-                  value={link.platform}
-                  onChange={(val) => { const links = [...(data.links || [])]; links[i] = { ...links[i], platform: val }; onChange({ ...data, links }) }}
-                />
-              </div>
-              <Input value={link.url} placeholder="URL" onChange={(e) => { const links = [...(data.links || [])]; links[i] = { ...links[i], url: e.target.value }; onChange({ ...data, links }) }} className="flex-1 h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
+    <div className="space-y-4">
+      {links.map((link, i) => (
+        <fieldset key={i} className="space-y-1.5">
+          <legend className="type-small text-ink">Profile {i + 1}</legend>
+          <div className="flex items-start gap-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <PlatformSelect label={`Platform for profile ${i + 1}`} value={link.platform} onChange={(platform) => update(i, { platform })} />
+              <Input
+                className={control}
+                type="url"
+                inputMode="url"
+                aria-label={`Web address for profile ${i + 1}`}
+                placeholder="https://"
+                value={link.url}
+                onChange={(e) => update(i, { url: e.target.value })}
+              />
             </div>
+            <button
+              type="button"
+              onClick={() => onChange({ ...data, links: links.filter((_, j) => j !== i) })}
+              aria-label={`Remove profile ${i + 1}`}
+              className={removeButton}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
           </div>
-          <button onClick={() => { const links = (data.links || []).filter((_: any, j: number) => j !== i); onChange({ ...data, links }) }} aria-label="Remove social link" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-5">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        </fieldset>
       ))}
-      <button onClick={() => onChange({ ...data, links: [...(data.links || []), { platform: "", url: "" }] })} className="min-h-[44px] text-small text-gold hover:text-gold/80 transition-colors">+ Add social link</button>
+      <AddRowButton onClick={() => onChange({ ...data, links: [...links, { platform: "", url: "" }] })}>Add profile</AddRowButton>
     </div>
   )
 }
 
 export function ImageEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Image URL</Label>
-        <Input value={data.src || ""} onChange={(e) => onChange({ ...data, src: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Caption</Label>
-        <Input value={data.caption || ""} onChange={(e) => onChange({ ...data, caption: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
+    <div className="space-y-4">
+      <Field label="Image address">
+        {(id) => (
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://" value={data.src || ""} onChange={(e) => onChange({ ...data, src: e.target.value })} />
+        )}
+      </Field>
+      <Field label="Description" hint=" (read aloud by screen readers)">
+        {(id) => <Input id={id} className={control} value={data.alt || ""} onChange={(e) => onChange({ ...data, alt: e.target.value })} />}
+      </Field>
+      <Field label="Caption" hint=" (optional)">
+        {(id) => <Input id={id} className={control} value={data.caption || ""} onChange={(e) => onChange({ ...data, caption: e.target.value })} />}
+      </Field>
     </div>
   )
 }
 
 export function GalleryEditor({ data, onChange }: EditorProps) {
+  const images = data.images || []
   return (
-    <div className="space-y-2">
-      {(data.images || []).map((img: any, i: number) => (
-        <div key={i} className="space-y-1.5">
-          <Label className="text-small text-muted-foreground">Image URL {i + 1}</Label>
-          <Input value={img.src} onChange={(e) => { const images = [...(data.images || [])]; images[i] = { ...images[i], src: e.target.value }; onChange({ ...data, images }) }} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-        </div>
+    <div className="space-y-4">
+      {images.map((img, i) => (
+        <Field key={i} label={`Image ${i + 1} address`}>
+          {(id) => (
+            <div className="flex items-center gap-1">
+              <Input
+                id={id}
+                className={control}
+                type="url"
+                inputMode="url"
+                placeholder="https://"
+                value={img.src}
+                onChange={(e) => onChange({ ...data, images: images.map((item, j) => (j === i ? { ...item, src: e.target.value } : item)) })}
+              />
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...data, images: images.filter((_, j) => j !== i) })}
+                  aria-label={`Remove image ${i + 1}`}
+                  className={removeButton}
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          )}
+        </Field>
       ))}
-      <button onClick={() => onChange({ ...data, images: [...(data.images || []), { src: "" }] })} className="min-h-[44px] text-small text-gold hover:text-gold/80 transition-colors">+ Add image</button>
+      <AddRowButton onClick={() => onChange({ ...data, images: [...images, { src: "" }] })}>Add image</AddRowButton>
     </div>
   )
 }
 
 export function EmbedEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-small text-muted-foreground">Embed URL</Label>
-      <Input value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} placeholder="YouTube, Spotify, TikTok..." className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-    </div>
+    <Field label="Link to embed">
+      {(id) => (
+        <>
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://" value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} />
+          <p className="type-small font-normal text-ink-soft">Paste a YouTube, Spotify, SoundCloud or TikTok link.</p>
+        </>
+      )}
+    </Field>
   )
 }
 
+type FormFieldType = "text" | "email" | "textarea" | "select"
+
 export function FormEditor({ data, onChange }: EditorProps) {
+  const fields = data.fields || []
+  const update = (i: number, patch: Partial<(typeof fields)[number]>) =>
+    onChange({ ...data, fields: fields.map((field, j) => (j === i ? { ...field, ...patch } : field)) })
+
   return (
-    <div className="space-y-2">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Form Title</Label>
-        <Input value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      {(data.fields || []).map((field: any, i: number) => (
-        <div key={i} className="flex gap-2 items-start">
-          <div className="flex-1 space-y-1.5">
-            <Label className="text-small text-muted-foreground">Field {i + 1}</Label>
-            <div className="flex gap-2">
-              <Input value={field.label} onChange={(e) => { const fields = [...(data.fields || [])]; fields[i] = { ...fields[i], label: e.target.value }; onChange({ ...data, fields }) }} className="flex-1 h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-              <select
-                value={field.type || "text"}
-                onChange={(e) => { const fields = [...(data.fields || [])]; fields[i] = { ...fields[i], type: e.target.value }; onChange({ ...data, fields }) }}
-                className="h-9 rounded-lg bg-dashboard-bg border border-dashboard-border text-dashboard-text text-small px-2 focus:border-gold/50 focus:ring-gold/20 outline-none"
-              >
-                <option value="text">Text</option>
-                <option value="email">Email</option>
-                <option value="textarea">Textarea</option>
-                <option value="number">Number</option>
-              </select>
+    <div className="space-y-4">
+      <Field label="Form title">
+        {(id) => <Input id={id} className={control} value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} />}
+      </Field>
+      {fields.map((field, i) => (
+        <fieldset key={i} className="space-y-1.5">
+          <legend className="type-small text-ink">Field {i + 1}</legend>
+          <div className="flex items-start gap-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex gap-1.5">
+                <Input className={cn(control, "flex-1")} aria-label={`Field ${i + 1} label`} value={field.label} onChange={(e) => update(i, { label: e.target.value })} />
+                <select
+                  aria-label={`Field ${i + 1} type`}
+                  value={field.type || "text"}
+                  onChange={(e) => update(i, { type: e.target.value as FormFieldType })}
+                  className={cn(selectClass, "w-[7.5rem] shrink-0")}
+                >
+                  <option value="text">Short text</option>
+                  <option value="email">Email</option>
+                  <option value="textarea">Long text</option>
+                  {!["text", "email", "textarea"].includes(field.type || "text") && <option value={field.type}>{field.type}</option>}
+                </select>
+              </div>
+              <label className="type-small flex min-h-11 items-center gap-2 font-normal text-ink md:min-h-8">
+                <input
+                  type="checkbox"
+                  checked={field.required || false}
+                  onChange={(e) => update(i, { required: e.target.checked })}
+                  className="size-4 accent-(--ink)"
+                />
+                Visitors must fill this in
+              </label>
             </div>
-            <label className="flex items-center gap-1.5 text-small text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={field.required || false}
-                onChange={(e) => { const fields = [...(data.fields || [])]; fields[i] = { ...fields[i], required: e.target.checked }; onChange({ ...data, fields }) }}
-                className="rounded border-dashboard-border bg-dashboard-bg text-gold focus:ring-gold/20"
-              />
-              Required
-            </label>
+            {fields.length > 1 && (
+              <button
+                type="button"
+                onClick={() => onChange({ ...data, fields: fields.filter((_, j) => j !== i) })}
+                aria-label={`Remove field ${i + 1}`}
+                className={removeButton}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            )}
           </div>
-          <button onClick={() => { const fields = (data.fields || []).filter((_: any, j: number) => j !== i); onChange({ ...data, fields }) }} aria-label="Remove form field" className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-coral transition-colors mt-6">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        </fieldset>
       ))}
-      <button onClick={() => onChange({ ...data, fields: [...(data.fields || []), { label: "New Field", type: "text", required: false }] })} className="min-h-[44px] text-small text-gold hover:text-gold/80 transition-colors">+ Add field</button>
+      <AddRowButton onClick={() => onChange({ ...data, fields: [...fields, { label: "New field", type: "text", required: false }] })}>Add field</AddRowButton>
+      <Field label="Button text">
+        {(id) => <Input id={id} className={control} value={data.buttonText || ""} placeholder="Submit" onChange={(e) => onChange({ ...data, buttonText: e.target.value })} />}
+      </Field>
     </div>
   )
 }
 
 export function CountdownEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Title</Label>
-        <Input value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Target Date</Label>
-        <Input type="datetime-local" value={data.targetDate || ""} onChange={(e) => onChange({ ...data, targetDate: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
+    <div className="space-y-4">
+      <Field label="Title">
+        {(id) => <Input id={id} className={control} value={data.title || ""} onChange={(e) => onChange({ ...data, title: e.target.value })} />}
+      </Field>
+      <Field label="Counts down to">
+        {(id) => (
+          <Input id={id} className={cn(control, "tabular")} type="datetime-local" value={data.targetDate || ""} onChange={(e) => onChange({ ...data, targetDate: e.target.value })} />
+        )}
+      </Field>
     </div>
   )
 }
 
 export function ButtonEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Label</Label>
-        <Input value={data.label || ""} onChange={(e) => onChange({ ...data, label: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">URL</Label>
-        <Input value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Variant</Label>
-        <Select value={data.variant || "primary"} onValueChange={(v) => onChange({ ...data, variant: v })}>
-          <SelectTrigger className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-dashboard-surface border-dashboard-border">
-            <SelectItem value="primary">Primary</SelectItem>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="ghost">Ghost</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Icon (optional)</Label>
-        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 rounded-lg border border-dashboard-border bg-dashboard-bg/50">
-          {PLATFORMS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onChange({ ...data, icon: data.icon === p.id ? "" : p.id })}
-              title={p.label}
-              className={`min-h-[44px] min-w-[44px] rounded-lg flex items-center justify-center transition-all ${
-                data.icon === p.id
-                  ? "bg-gold text-ink ring-1 ring-gold"
-                  : "text-muted-foreground hover:text-dashboard-text hover:bg-dashboard-surface"
-              }`}
-            >
-              <PlatformIcon platform={p.id} className="w-4 h-4" />
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center justify-between pt-1">
-        <div>
-          <Label className="text-small text-dashboard-text">Full width</Label>
-          <p className="text-small text-muted-foreground/60">Span the full row.</p>
-        </div>
-        <Switch checked={!!data.fullWidth} onCheckedChange={(checked) => onChange({ ...data, fullWidth: checked })} />
-      </div>
+    <div className="space-y-4">
+      <Field label="Label">
+        {(id) => <Input id={id} className={control} value={data.label || ""} onChange={(e) => onChange({ ...data, label: e.target.value })} />}
+      </Field>
+      <Field label="Web address">
+        {(id) => (
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://" value={data.url || ""} onChange={(e) => onChange({ ...data, url: e.target.value })} />
+        )}
+      </Field>
+      <Field label="Style">
+        {(id) => (
+          <select
+            id={id}
+            value={data.variant || "primary"}
+            onChange={(e) => onChange({ ...data, variant: e.target.value as "primary" | "outline" | "ghost" })}
+            className={selectClass}
+          >
+            <option value="primary">Filled</option>
+            <option value="outline">Outlined</option>
+            <option value="ghost">Text only</option>
+          </select>
+        )}
+      </Field>
+      <IconPicker value={data.icon} onChange={(icon) => onChange({ ...data, icon })} />
+      <SwitchRow
+        label="Full width"
+        description="Takes the whole row."
+        checked={!!data.fullWidth}
+        onCheckedChange={(fullWidth) => onChange({ ...data, fullWidth })}
+      />
     </div>
   )
 }
 
 export function SpacerEditor({ data, onChange }: EditorProps) {
+  const height = data.height || 24
   return (
-    <div className="space-y-3">
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-small text-muted-foreground">Height</Label>
-          <span className="text-small font-mono text-dashboard-text">{data.height || 24}px</span>
-        </div>
+    <Field label="Height" hint={` (${height}px)`}>
+      {(id) => (
         <input
+          id={id}
           type="range"
           min={8}
           max={120}
           step={4}
-          value={data.height || 24}
+          value={height}
           onChange={(e) => onChange({ ...data, height: parseInt(e.target.value) })}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
-          style={{
-            background: `linear-gradient(to right, #D2A24C ${((data.height || 24) - 8) / (120 - 8) * 100}%, rgba(255,255,255,0.1) ${((data.height || 24) - 8) / (120 - 8) * 100}%)`,
-            accentColor: "#D2A24C",
-          }}
-          aria-label="Spacer height"
+          className="h-11 w-full cursor-pointer accent-(--pink) md:h-9"
         />
-        <div className="flex justify-between text-small text-muted-foreground/40 mt-1">
-          <span>8px</span>
-          <span>120px</span>
-        </div>
-      </div>
-    </div>
+      )}
+    </Field>
   )
 }
 
 export function VideoEditor({ data, onChange }: EditorProps) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Video URL</Label>
-        <Input value={data.src || ""} onChange={(e) => onChange({ ...data, src: e.target.value })} placeholder="https://example.com/video.mp4" className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Poster image (optional)</Label>
-        <Input value={data.poster || ""} onChange={(e) => onChange({ ...data, poster: e.target.value })} placeholder="https://example.com/poster.jpg" className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption font-mono focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-small text-muted-foreground">Caption</Label>
-        <Input value={data.caption || ""} onChange={(e) => onChange({ ...data, caption: e.target.value })} className="h-9 bg-dashboard-bg border-dashboard-border text-dashboard-text text-caption focus:border-gold/50 focus:ring-gold/20" />
-      </div>
-      <div className="space-y-2 pt-1">
-        <div className="flex items-center justify-between">
-          <Label className="text-small text-dashboard-text">Autoplay</Label>
-          <Switch checked={!!data.autoplay} onCheckedChange={(checked) => onChange({ ...data, autoplay: checked })} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-small text-dashboard-text">Loop</Label>
-          <Switch checked={!!data.loop} onCheckedChange={(checked) => onChange({ ...data, loop: checked })} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-small text-dashboard-text">Muted</Label>
-          <Switch checked={!!data.muted} onCheckedChange={(checked) => onChange({ ...data, muted: checked })} />
-        </div>
+    <div className="space-y-4">
+      <Field label="Video address">
+        {(id) => (
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://example.com/video.mp4" value={data.src || ""} onChange={(e) => onChange({ ...data, src: e.target.value })} />
+        )}
+      </Field>
+      <Field label="Poster image address" hint=" (optional)">
+        {(id) => (
+          <Input id={id} className={control} type="url" inputMode="url" placeholder="https://" value={data.poster || ""} onChange={(e) => onChange({ ...data, poster: e.target.value })} />
+        )}
+      </Field>
+      <Field label="Caption" hint=" (optional)">
+        {(id) => <Input id={id} className={control} value={data.caption || ""} onChange={(e) => onChange({ ...data, caption: e.target.value })} />}
+      </Field>
+      <div>
+        <SwitchRow label="Start playing on its own" checked={!!data.autoplay} onCheckedChange={(autoplay) => onChange({ ...data, autoplay })} />
+        <SwitchRow label="Repeat" checked={!!data.loop} onCheckedChange={(loop) => onChange({ ...data, loop })} />
+        <SwitchRow label="Start without sound" checked={!!data.muted} onCheckedChange={(muted) => onChange({ ...data, muted })} />
       </div>
     </div>
   )

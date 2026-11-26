@@ -2,11 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { loginActionRaw } from "@/lib/actions/auth"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
-import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { loginActionRaw } from "@/lib/actions/auth"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { FieldError, FieldLabel, authInputClass } from "../field"
 
 export function LoginForm() {
   const router = useRouter()
@@ -21,87 +23,78 @@ export function LoginForm() {
     setLoading(true)
     setError("")
 
-    const result: any = await loginActionRaw({ email, password })
+    const result = await loginActionRaw({ email, password })
     if (result?.error) {
-      setError(result.error)
-      toast.error(result.error)
+      setError("That email and password don't match an account. Check both and try again.")
       setLoading(false)
       return
     }
 
-    toast.success("Welcome back!")
+    toast.success("Logged in")
     router.push("/dashboard")
     router.refresh()
   }
 
   return (
     <>
-      <div className="mb-8">
-        <h1 className="font-display text-display font-bold text-ink">Welcome back</h1>
-        <p className="text-body text-muted-foreground mt-1">Sign in to your page.</p>
-      </div>
+      <h1 className="type-title-1">Log in</h1>
+      <p className="type-body mt-3 text-ink-soft">Pick up where you left your page.</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <label htmlFor="email" className="text-caption font-medium text-ink">Email</label>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="h-11 bg-white border-ink/10 text-ink placeholder:text-ink/30 focus:border-gold focus:ring-gold/20 rounded-xl"
+            aria-invalid={error ? true : undefined}
+            className={authInputClass}
           />
         </div>
+
         <div className="space-y-2">
-          <label htmlFor="password" className="text-caption font-medium text-ink">Password</label>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
           <div className="relative">
             <Input
               id="password"
               type={showPw ? "text" : "password"}
-              placeholder="••••••••"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="h-11 bg-white border-ink/10 text-ink placeholder:text-ink/30 focus:border-gold focus:ring-gold/20 rounded-xl pr-10"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
+              className={`${authInputClass} pr-12`}
             />
             <button
               type="button"
               onClick={() => setShowPw(!showPw)}
               aria-label={showPw ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink transition-colors"
+              aria-pressed={showPw}
+              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ink-soft transition-colors duration-150 hover:text-ink"
             >
-              {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPw ? <EyeOff className="size-[18px]" strokeWidth={1.75} /> : <Eye className="size-[18px]" strokeWidth={1.75} />}
             </button>
           </div>
         </div>
 
-        {error && (
-          <p className="text-small text-coral bg-coral/10 rounded-lg px-3 py-2">{error}</p>
-        )}
+        {error && <FieldError id="login-error">{error}</FieldError>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full h-11 rounded-xl bg-ink text-bone font-semibold text-caption flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors disabled:opacity-50"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>Sign in <ArrowRight className="w-4 h-4" /></>
-          )}
-        </button>
+        <Button type="submit" variant="pink" size="touch" disabled={loading} className="w-full">
+          {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
+          Log in
+        </Button>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-caption text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="font-semibold text-ink hover:text-gold transition-colors">
-            Sign up
-          </Link>
-        </p>
-      </div>
+      <p className="type-body mt-8 text-ink-soft">
+        No page yet?{" "}
+        <Link href="/auth/signup" className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4">
+          Claim your name
+        </Link>
+      </p>
     </>
   )
 }

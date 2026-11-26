@@ -1,6 +1,8 @@
+import { SITE_URL } from "@/lib/site"
 import type { Metadata, Viewport } from "next"
-import { Fraunces, Public_Sans, IBM_Plex_Mono } from "next/font/google"
+import { Archivo } from "next/font/google"
 import "./globals.css"
+import "./themes.css"
 import { Toaster } from "@/components/ui/sonner"
 
 export const viewport: Viewport = {
@@ -9,34 +11,25 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
-const fraunces = Fraunces({
-  variable: "--font-display",
+// One family, used through its width axis (DESIGN_SYSTEM.md §4).
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
+  axes: ["wdth"],
+  display: "swap",
 })
 
-const publicSans = Public_Sans({
-  variable: "--font-body",
-  subsets: ["latin"],
-})
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  weight: ["400", "500", "600"],
-  subsets: ["latin"],
-})
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://linknest.app"
+const baseUrl = SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: "LinkNest — Your corner of the web",
+  title: "LinkNest — One page for all of it",
   description:
-    "LinkNest gives you one page to share everything you are. Add links, buttons, media galleries, videos, forms, countdown timers, and analytics — total design freedom, no code required.",
+    "LinkNest is a free, open-source link-in-bio page. Claim a name, stack links, images, forms and countdowns, and share one URL.",
   openGraph: {
-    title: "LinkNest — Your corner of the web",
+    title: "LinkNest — One page for all of it",
     description:
-      "One page to share everything you are. Links, media, forms, countdowns, analytics — total design freedom.",
+      "Claim a name, stack links, images, forms and countdowns, and share one URL. Free and open source.",
     url: baseUrl,
     siteName: "LinkNest",
     locale: "en_US",
@@ -54,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${publicSans.variable} ${ibmPlexMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${archivo.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster />
